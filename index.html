@@ -3826,5 +3826,107 @@
       const m = document.getElementById(id); if (m) { m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); }
     }));
   </script>
+    <!-- INTEGRASI SUPABASE -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    // GANTI DENGAN URL DAN KEY DARI SUPABASE ANDA
+    // (Lihat panduan sebelumnya: Project Settings > API Keys)
+    const SUPABASE_URL = 'https://[PROJECT_REF].supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_...'; // Atau anon key
+    
+    // Inisialisasi klien Supabase
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Simpan user saat ini (Sementara kita hardcode dulu untuk pengujian)
+    // Nanti ini bisa diganti dengan hasil login
+    const CURRENT_USER = 'anggota_tim@kemenkeu.go.id'; 
+    
+    // Expose ke global window agar bisa dipanggil oleh script utama Anda
+    window.supabase = supabase;
+    window.CURRENT_USER = CURRENT_USER;
+
+    // --- FUNGSI-FUNGSI UNTUK APLIKASI ANDA ---
+
+    // 1. Fungsi Ambil Data (Read)
+    window.muatSemuaEvent = async function() {
+      const { data, error } = await window.supabase
+        .from('events')
+        .select('*')
+        .order('tanggal', { ascending: true });
+        
+      if (error) {
+        console.error('Gagal memuat:', error);
+        return [];
+      }
+      return data;
+    };
+
+    // 2. Fungsi Simpan (Create)
+    window.simpanEventBaru = async function(eventData) {
+      // eventData = { judul, tanggal, deskripsi, kategori }
+      const { data, error } = await window.supabase
+        .from('events')
+        .insert([{
+          ...eventData,
+          created_by: window.CURRENT_USER 
+        }])
+        .select();
+
+      if (error) {
+        console.error('Gagal menyimpan:', error);
+        alert('Gagal menyimpan event.');
+        return null;
+      }
+      return data[0];
+    };
+
+    // 3. Fungsi Update (Edit)
+    window.updateEvent = async function(eventId, eventData) {
+      const { data, error } = await window.supabase
+        .from('events')
+        .update({
+          ...eventData,
+          updated_at: new Date().toISOString(),
+          created_by: window.CURRENT_USER // Penting agar audit log mencatat aktor yang benar
+        })
+        .eq('id', eventId)
+        .select();
+
+      if (error) {
+        console.error('Gagal update:', error);
+        return null;
+      }
+      return data[0];
+    };
+
+    // 4. Fungsi Hapus (Delete)
+    window.hapusEvent = async function(eventId) {
+      const { error } = await window.supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) {
+        console.error('Gagal hapus:', error);
+        return false;
+      }
+      return true;
+    };
+
+    // 5. Fungsi Lihat Audit Log
+    window.muatAuditLog = async function() {
+      const { data, error } = await window.supabase
+        .from('audit_logs')
+        .select('*')
+        .order('waktu', { ascending: false });
+
+      if (error) {
+        console.error('Gagal memuat audit:', error);
+        return [];
+      }
+      return data;
+    };
+  </script>
 </body>
 </html>
