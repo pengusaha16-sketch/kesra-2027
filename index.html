@@ -2037,7 +2037,14 @@
         const unsynced = auditLogs.filter(l => !l.synced).slice(0, 400);
         const payload = { action: 'sync', token: syncCfg.token, entries: unsynced.map(l => ({ id: l.id, ts: l.ts, user: l.user, actionType: l.actionType, eventTitle: l.eventTitle, fieldName: l.fieldName, oldVal: l.oldVal, newVal: l.newVal })) };
         // tanpa header Content-Type -> text/plain (permintaan sederhana, tanpa preflight CORS)
-        const res = await fetch(syncCfg.url, { method: 'POST', body: JSON.stringify(payload), redirect: 'follow' });
+        const res = await fetch(syncCfg.url, { 
+    method: 'POST', 
+    headers: {
+        'Content-Type': 'application/json' // <--- INI TAMBAHAN PENTINGNYA
+    },
+    body: JSON.stringify(payload), 
+    redirect: 'follow' 
+});
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (!data || !data.ok) throw new Error((data && data.error) || 'Respons server tidak valid');
