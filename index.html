@@ -1,4 +1,3 @@
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyCM6uiM_WVSNGkvYvetZwx1PCeBaZbam_hs0nHFwFbkQCEHH96Vg_9HR8bSGBkGMBWrg/exec'; // Ganti dengan URL /exec Anda
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -1020,7 +1019,8 @@ const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyCM6uiM_WVSNGk
       </div>
     </div>
   </div>
-
+// URL Web App Google Apps Script Anda
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyCM6uiM_WVSNGkvYvetZwx1PCeBaZbam_hs0nHFwFbkQCEHH96Vg_9HR8bSGBkGMBWrg/exec';
   <script>
     // =========================================================================
     // KONFIGURASI REFERENSI MAK & STANDAR BIAYA MASUKAN (SBM) 2027 KEMENKEU
@@ -1800,7 +1800,28 @@ const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyCM6uiM_WVSNGk
       if (critical || warning) return { code: 'ALERT', label: `SLA Alert H-${days} (${readiness}%)`, badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold', isAlert: true };
       return { code: 'PROGRESS', label: `Proses (${readiness}%)${days !== null ? ' • H-' + days : ''}`, badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', isAlert: false };
     }
-
+function loadFromCloud() {
+  showToast('Memuat data dari Google Sheets...');
+  fetch(GAS_WEB_APP_URL + '?action=getData')
+    .then(res => res.json())
+    .then(res => {
+      if (res.status === 'success' && res.data) {
+        if (res.data.events && res.data.events.length > 0) {
+          eventsData = res.data.events;
+        }
+        if (res.data.auditLogs && res.data.auditLogs.length > 0) {
+          auditLogs = res.data.auditLogs;
+        }
+        persistToStorage();
+        refreshAllUI();
+        showToast('Data berhasil disinkronkan dari Google Sheets!');
+      }
+    })
+    .catch(err => {
+      console.error('Gagal memuat dari cloud:', err);
+      showToast('Gagal terhubung ke Google Sheets. Menggunakan data lokal.', true);
+    });
+}
     // =========================================================================
     // PERSISTENSI LOCALSTORAGE & AUDIT LOGGING
     // =========================================================================
@@ -1854,7 +1875,36 @@ const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyCM6uiM_WVSNGk
       const loader = document.getElementById('loadingOverlay');
       loader.style.opacity = '1';
       loader.style.display = 'flex';
+// ---> TAMBAHKAN PEMANGGILAN INI AGAR DATA DIAMBIL DARI CLOUD <---
+  loadFromCloud();
 
+  // (Kode di bawah ini tetap ada sebagai cadangan jika offline)
+  const savedEvents = localStorage.getItem(STORAGE_KEY_EVENTS);
+  const savedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
+
+  if (savedEvents) {
+    try {
+      eventsData = normalizeList(JSON.parse(savedEvents));
+      if (eventsData.length === 0) throw new Error('data kosong');
+      auditLogs = savedLogs ? JSON.parse(savedLogs) : [];
+      if (!Array.isArray(auditLogs)) auditLogs = [];
+    } catch (e) {
+      eventsData = loadDefaults();
+      auditLogs = [];
+    }
+  } else {
+    eventsData = loadDefaults();
+    addAuditLog('SISTEM', 'Inisialisasi Peta Kesra 2027', 'Database Awal', 'Kosong', '22 Event + RAB MAK');
+  }
+  migrateAddDecember();
+  persistToStorage();
+
+  setTimeout(() => {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 300);
+    safeBoot();
+  }, 350);
+};
       const savedEvents = localStorage.getItem(STORAGE_KEY_EVENTS);
       const savedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
 
