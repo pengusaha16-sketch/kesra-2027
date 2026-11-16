@@ -3026,19 +3026,59 @@
       const quarter = `Q${Math.floor(validation.startObj.getMonth() / 3) + 1}`;
       const warnings = getScheduleWarnings({ id, rawDate: dateInputVal, rawDateEnd, pic });
 
-      if (id) {
-        const idx = eventsData.findIndex(item => String(item.id) === String(id));
-        if (idx !== -1) {
-          const oldEv = eventsData[idx];
-          const _keys = new Set(lineKeys(rabItems));
-          const _ex = oldEv.execution || blankExecution();
-          const _kept = {}; let _dropped = 0;
-          Object.keys(_ex.rabActuals || {}).forEach(k => { if (_keys.has(k)) _kept[k] = _ex.rabActuals[k]; else _dropped++; });
-          const _newEx = { ..._ex, rabActuals: _kept };
-          if (_dropped) {
-            if (Object.keys(_kept).length) _newEx.actualBudget = Object.values(_kept).reduce((a, b) => a + b, 0);
-            addAuditLog('REALISASI_AAR', title, 'Realisasi per komponen RAB', `${_dropped} baris realisasi`, 'Dihapus karena komponen RAB diubah');
-          }
+        // --- AWAL KODE SUPABASE ---
+  
+  // Siapkan objek data untuk dikirim ke Supabase
+  const eventData = {
+    judul: title,
+    kategori: category,
+    tanggal: dateInputVal, 
+    // Kita gabungkan semua data kompleks ke dalam kolom deskripsi agar tidak error
+    deskripsi: JSON.stringify({
+      topic: topic,
+      location: location,
+      pic: pic,
+      format: format,
+      fundingSource: fundingSource,
+      dipaShare: dipaShare,
+      targetParticipants: targetParticipants,
+      rawDateEnd: rawDateEnd,
+      rabItems: rabItems,
+      readiness: readiness,
+      warnings: warnings
+    })
+  };
+
+  let hasil = null;
+
+  // Cek apakah ini Edit (Update) atau Tambah Baru (Create)
+  if (id) {
+    // Mode EDIT: Kirim data ke Supabase berdasarkan ID
+    hasil = await window.updateEvent(id, eventData);
+  } else {
+    // Mode TAMBAH BARU: Simpan data baru ke Supabase
+    hasil = await window.simpanEventBaru(eventData);
+  }
+
+  // Jika berhasil
+  if (hasil) {
+    showToast('Data berhasil disimpan ke Supabase!', false);
+    
+    // Tutup Modal Form
+    // document.getElementById('eventModal').classList.add('hidden'); 
+    
+    // Render ulang kalender (sesuaikan nama fungsinya dengan milik Anda)
+    // renderCalendar(); 
+    
+    // Reset Form
+    document.getElementById('eventForm').reset();
+    
+  } else {
+    showToast('Gagal menyimpan data ke Supabase.', true);
+  }
+  
+  // --- AKHIR KODE SUPABASE ---
+}
           const next = { ...oldEv, execution: _newEx, title, category, month, rawDate: dateInputVal, rawDateEnd, dateStr: formattedDateStr, quarter,
             pic, targetParticipants, format, topic, location, fundingSource, dipaShare, rabItems, readiness };
           const oldBudget = getEventTotalBudget(oldEv), newBudget = getEventTotalBudget(next);
