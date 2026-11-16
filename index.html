@@ -850,16 +850,27 @@
         <p class="text-xs text-blue-100">Agar semua peserta melihat log perubahan yang sama.</p>
       </div>
       <form onsubmit="saveSyncSettings(event)" class="p-5 space-y-3 text-sm overflow-y-auto">
-        <div>
-          <label for="syncUrlInput" class="block font-semibold text-slate-700 mb-1">URL Web App (Google Apps Script)</label>
-          <input id="syncUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-kemenkeu-600">
-        </div>
-        <div>
-          <label for="syncTokenInput" class="block font-semibold text-slate-700 mb-1">Kode akses bersama (token)</label>
-          <input id="syncTokenInput" type="password" autocomplete="off" placeholder="sama dengan TOKEN di Script Properties" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-kemenkeu-600">
-        </div>
-        <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="syncAutoInput" checked> Sinkron otomatis tiap 60 detik &amp; saat ada perubahan</label>
-        <div class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+    <form onsubmit="saveSyncSettings(event)" class="p-5 space-y-3 text-sm overflow-y-auto">
+  
+  <!-- Teks penjelasan baru -->
+  <p class="text-slate-600">
+    Aplikasi ini sekarang menggunakan <strong>Supabase</strong> untuk penyimpanan data bersama. 
+    Anda tidak perlu memasukkan URL atau Token manual lagi. Cukup aktifkan sinkronisasi di bawah ini.
+  </p>
+
+  <!-- Hapus input syncUrlInput dan syncTokenInput yang lama -->
+
+  <!-- Tombol Aksi -->
+  <div class="flex gap-2 pt-2">
+    <button type="submit" class="bg-kemenkeu-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-kemenkeu-700 transition">
+      Aktifkan Sinkronisasi
+    </button>
+    <button type="button" onclick="clearSyncSettings()" class="bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold hover:bg-red-200 transition">
+      Putuskan
+    </button>
+  </div>
+
+</form>
           <p><b>Cara kerja:</b> setiap perubahan dikirim ke Google Sheet milik Anda dan dibaca oleh semua peserta yang memasukkan URL + token yang sama. Log hanya bisa ditambah, tidak bisa dihapus dari dashboard.</p>
           <p><b>Batasan:</b> yang dibagikan hanya <b>log</b>, bukan datanya. Token disimpan di browser ini dan nama pengguna tidak diverifikasi. Kode server ada pada file <code>apps_script_audit_log.gs</code>.</p>
         </div>
@@ -2064,26 +2075,42 @@
       document.getElementById('syncModal').classList.remove('hidden');
     }
     async function saveSyncSettings(e) {
-      e.preventDefault();
-      const url = document.getElementById('syncUrlInput').value.trim();
-      const token = document.getElementById('syncTokenInput').value.trim();
-      if (!/^https:\/\//i.test(url)) { showToast('URL harus diawali https://', true); return; }
-      if (token.length < 8) { showToast('Token minimal 8 karakter.', true); return; }
-      syncCfg = { url, token, auto: document.getElementById('syncAutoInput').checked };
-      try { localStorage.setItem(STORAGE_KEY_SYNC, JSON.stringify(syncCfg)); } catch (err) { /* abaikan */ }
-      document.getElementById('syncModal').classList.add('hidden');
-      startSyncTimer();
-      const ok = await syncAuditLog({});
-      showToast(ok ? 'Terhubung. Log bersama berhasil disinkronkan.' : 'Pengaturan tersimpan, tetapi sinkronisasi gagal. Periksa URL/token.', !ok);
+  e.preventDefault();
+  // Karena kita pakai Supabase, kita tidak butuh input URL & Token manual lagi
+  try {
+    // Simpan status bahwa sync aktif
+    localStorage.setItem('SYNC_ACTIVE', 'true'); 
+    
+    // Sembunyikan modal
+    document.getElementById('syncModal').classList.add('hidden');
+    
+    // Jalankan fungsi sync
+    startSyncTimer();
+    
+    // Uji koneksi ke Supabase (mengambil data audit log sebagai tes)
+    const ok = await window.muatAuditLog();
+    
+    if (ok) {
+      showToast('Terhubung ke Supabase! Sinkronisasi berhasil.', false);
+    } else {
+      showToast('Gagal terhubung ke Supabase. Periksa URL dan Key.', true);
     }
+  } catch (err) {
+    showToast('Terjadi kesalahan sistem.', true);
+  }
+}
     function clearSyncSettings() {
-      if (!confirm('Putuskan penyimpanan bersama? Log di perangkat ini tetap ada, tetapi tidak lagi dikirim/diterima.')) return;
-      syncCfg = { url: '', token: '', auto: true };
-      try { localStorage.removeItem(STORAGE_KEY_SYNC); } catch (err) { /* abaikan */ }
-      clearInterval(syncTimer); syncTimer = null;
-      document.getElementById('syncModal').classList.add('hidden');
-      setSyncStatus('off');
-    }
+  if (!confirm("Putuskan penyimpanan bersama? Log di perangkat ini tetap ada, tetapi tidak lagi dikirim/diterima.")) return;
+  
+  try {
+    localStorage.removeItem('SYNC_ACTIVE'); 
+  } catch (err) { /* abaikan */ }
+  
+  clearInterval(syncTimer); 
+  syncTimer = null;
+  document.getElementById('syncModal').classList.add('hidden');
+  setSyncStatus('off');
+}
     function startSyncTimer() {
       clearInterval(syncTimer); syncTimer = null;
       if (syncCfg.url && syncCfg.auto) syncTimer = setInterval(() => { if (!document.hidden) syncAuditLog({ silent: true }); }, 60000);
