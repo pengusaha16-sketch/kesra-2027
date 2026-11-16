@@ -2039,14 +2039,14 @@
         // tanpa header Content-Type -> text/plain (permintaan sederhana, tanpa preflight CORS)
         const res = await     // --- MULAI BAGIAN YANG DIPERBAIKI ---
     try {
-        const res = await fetch(syncCfg.url, { 
-            method: 'POST', 
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload), 
-            redirect: 'follow' 
-        });
+       const res = await fetch(syncCfg.url, { 
+    method: 'POST', 
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload), 
+    redirect: 'follow' 
+});
 
         if (!res.ok) {
             throw new Error('HTTP ' + res.status);
