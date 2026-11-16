@@ -2039,14 +2039,16 @@
         // tanpa header Content-Type -> text/plain (permintaan sederhana, tanpa preflight CORS)
         const res = await     // --- MULAI BAGIAN YANG DIPERBAIKI ---
     try {
-       const res = await fetch(syncCfg.url, { 
-    method: 'POST', 
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload), 
-    redirect: 'follow' 
-});
+         // --- AWAL KODE SINKRONISASI YANG DIPERBAIKI ---
+    try {
+        const res = await fetch(syncCfg.url, { 
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload), 
+            redirect: 'follow' 
+        });
 
         if (!res.ok) {
             throw new Error('HTTP ' + res.status);
@@ -2054,29 +2056,30 @@
 
         const data = await res.json();
         
-        // Pengecekan respons dari server
-        if (data.status !== 'success' && !data.ok) { 
-            throw new Error((data && data.message) || (data && data.error) || 'Respons server tidak valid');
+        // Cek respons dari server (Server sekarang mengirim { ok: true })
+        if (!data.ok) {
+            throw new Error((data && data.error) || (data && data.message) || 'Respons server tidak valid');
         }
 
-        // Tandai data sebagai tersinkronisasi jika berhasil
+        // Tandai data sebagai tersinkronisasi
         unsynced.forEach(l => { l.synced = true; });
         
-        // Update UI (Badge & Waktu)
-        const badge = document.getElementById('badgeAuditCount');
-        if (badge) badge.innerText = auditLogs.length; // Pastikan nama variabel auditLogs sesuai dengan kode Anda
-        
-        // Jadwalkan sinkronisasi berikutnya
+        // Update tampilan (Badge)
+        if (document.getElementById('badgeAuditCount')) {
+            document.getElementById('badgeAuditCount').innerText = auditLogs.length;
+        }
+
+        // Jika masih ada data yang belum tersinkron, coba lagi
         if (unsynced.filter(l => !l.synced).length > 0) {
             scheduleSync(500);
         }
 
     } catch (err) {
         console.error("Gagal sinkron:", err);
-        // Menampilkan pesan error ke UI (jika ada elemen untuk menampilkannya)
-        // Misalnya: document.getElementById('statusSinkron').innerText = err.message;
-        throw err; // Lemparkan error agar ditangkap oleh blok catch di luar
+        // Jika Anda punya elemen HTML untuk menampilkan pesan error, aktifkan baris di bawah ini:
+        // document.getElementById('statusSinkron').innerText = err.message;
     }
+    // --- AKHIR KODE SINKRONISASI YANG DIPERBAIKI ---
     // --- AKHIR BAGIAN YANG DIPERBAIKI ---
     }
     function openSyncModal() {
