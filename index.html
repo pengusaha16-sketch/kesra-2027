@@ -2178,13 +2178,48 @@
       }, 350);
     };
 
-    function forceOpenDashboard() {
-      if (!eventsData || eventsData.length === 0) eventsData = loadDefaults();
-      const loader = document.getElementById('loadingOverlay');
+    async function forceOpenDashboard() {
+  // 1. Ubah tombol menjadi mode loading (opsional)
+  const btn = document.querySelector('button[onclick="forceOpenDashboard()"]');
+  if (btn) {
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menghubungkan...';
+    btn.disabled = true;
+  }
+
+  try {
+    // 2. Ambil data dari Supabase (menggunakan fungsi yang sudah kita buat)
+    // Fungsi ini akan otomatis mengisi variabel eventsData dan auditLogs
+    await window.refreshSemuaData(); 
+
+    // 3. Jika Supabase kosong (belum ada data sama sekali), baru gunakan data default
+    if (!eventsData || eventsData.length === 0) {
+      eventsData = loadDefaults();
+    }
+
+    // 4. Animasi hilangkan layar loading (sesuai kode asli Anda)
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) {
       loader.style.opacity = '0';
       setTimeout(() => loader.style.display = 'none', 250);
-      safeBoot();
     }
+
+    // 5. Jalankan fungsi booting aplikasi Anda
+    safeBoot();
+
+  } catch (error) {
+    console.error("Gagal terhubung ke Supabase:", error);
+    alert("Gagal memuat data dari Supabase. Periksa koneksi atau konfigurasi.");
+    
+    // Jika gagal, tetap buka dashboard dengan data default agar aplikasi tidak freeze
+    if (!eventsData || eventsData.length === 0) eventsData = loadDefaults();
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.style.display = 'none', 250);
+    }
+    safeBoot();
+  }
+}
 
     function confirmResetDefault() {
       if (!confirm('Kembalikan seluruh data jadwal, anggaran RAB, dan evaluasi AAR ke pengaturan default awal?\n(Audit log tidak dihapus.)')) return;
