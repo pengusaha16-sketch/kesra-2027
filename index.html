@@ -2037,32 +2037,47 @@
         const unsynced = auditLogs.filter(l => !l.synced).slice(0, 400);
         const payload = { action: 'sync', token: syncCfg.token, entries: unsynced.map(l => ({ id: l.id, ts: l.ts, user: l.user, actionType: l.actionType, eventTitle: l.eventTitle, fieldName: l.fieldName, oldVal: l.oldVal, newVal: l.newVal })) };
         // tanpa header Content-Type -> text/plain (permintaan sederhana, tanpa preflight CORS)
+        const res = await     // --- MULAI BAGIAN YANG DIPERBAIKI ---
+    try {
         const res = await fetch(syncCfg.url, { 
-    method: 'POST', 
-    headers: {
-        'Content-Type': 'application/json' // <--- INI TAMBAHAN PENTINGNYA
-    },
-    body: JSON.stringify(payload), 
-    redirect: 'follow' 
-});
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload), 
+            redirect: 'follow' 
+        });
+
+        if (!res.ok) {
+            throw new Error('HTTP ' + res.status);
+        }
+
         const data = await res.json();
-        if (!data || !data.ok) throw new Error((data && data.error) || 'Respons server tidak valid');
+        
+        // Pengecekan respons dari server
+        if (data.status !== 'success' && !data.ok) { 
+            throw new Error((data && data.message) || (data && data.error) || 'Respons server tidak valid');
+        }
+
+        // Tandai data sebagai tersinkronisasi jika berhasil
         unsynced.forEach(l => { l.synced = true; });
-        mergeLogs(data.entries || []);
-        persistLogsOnly();
-        syncState.last = new Date(); ok = true;
-        document.getElementById('badgeAuditCount').innerText = auditLogs.length;
-        setSyncStatus('ok');
-        renderAuditLogTable();
-        if (auditLogs.some(l => !l.synced)) scheduleSync(500);
-      } catch (err) {
-        setSyncStatus('err', err.message || 'tidak dapat terhubung');
-      } finally {
-        syncState.busy = false;
-        if (syncState.pending) { syncState.pending = false; scheduleSync(500); }
-      }
-      return ok;
+        
+        // Update UI (Badge & Waktu)
+        const badge = document.getElementById('badgeAuditCount');
+        if (badge) badge.innerText = auditLogs.length; // Pastikan nama variabel auditLogs sesuai dengan kode Anda
+        
+        // Jadwalkan sinkronisasi berikutnya
+        if (unsynced.filter(l => !l.synced).length > 0) {
+            scheduleSync(500);
+        }
+
+    } catch (err) {
+        console.error("Gagal sinkron:", err);
+        // Menampilkan pesan error ke UI (jika ada elemen untuk menampilkannya)
+        // Misalnya: document.getElementById('statusSinkron').innerText = err.message;
+        throw err; // Lemparkan error agar ditangkap oleh blok catch di luar
+    }
+    // --- AKHIR BAGIAN YANG DIPERBAIKI ---
     }
     function openSyncModal() {
       document.getElementById('syncUrlInput').value = syncCfg.url;
