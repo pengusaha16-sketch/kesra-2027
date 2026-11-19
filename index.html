@@ -4955,7 +4955,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         if (!DOC_TYPES[ext]) { fail.push(`${f.name}: format tidak didukung`); continue; }
         if (f.size > DOC_MAX_MB * 1048576) { fail.push(`${f.name}: melebihi ${DOC_MAX_MB} MB`); continue; }
         const safe = f.name.normalize('NFKD').replace(/[^\w.\-]+/g, '_').slice(-80);
-        const path = `${docsEventId}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}_${safe}`;
+         // Menggunakan 'unknown_event' jika docsEventId kosong, dan membersihkan spasi
+  const safeEventId = docsEventId ? String(docsEventId).replace(/[^a-zA-Z0-9_-]/g, '') : 'umum';
+  const path = `${safeEventId}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}_${safe}`;
         try {
           const up = await sb.storage.from(DOC_BUCKET).upload(path, f, { contentType: DOC_TYPES[ext], upsert: false });
           if (up.error) throw new Error(up.error.message);
