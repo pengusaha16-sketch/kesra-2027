@@ -2844,20 +2844,56 @@ function updateAdminButtons() {
       teamMeta.h[id] = evHash(ev);
       return true;
     }
-    async function teamPull(pre) {
-      if (!sb || !teamSession || !teamRole) return false;
-      const rem = pre || await fetchRemoteEvents();
-      if (!rem.ok) { setTeam(rem.offline ? 'offline' : 'error', rem.offline ? 'tidak dapat terhubung' : rem.msg); return false; }
-      let changed = 0;
-      rem.rows.forEach(r => { if (applyRemoteRow(r)) changed++; });
-      saveTeamMeta();
-      if (changed) { persistCore(); refreshAllUI(); if (!pre) showToast(`${changed} perubahan dari rekan tim diterapkan.`); }
-      await pullLogs();
-      teamState.last = new Date();
-      if (!teamChannel && teamActive()) startTeamRealtime();
-      if (teamState.status !== 'online' && teamActive()) setTeam('online'); else renderSyncStatus();
-      return true;
+    async function pullSingleRow(id) {
+  const f = await fetchServerRow(id);
+  if (!f.net && !f.err && f.row && applyRemoteRow(f.row)) {
+    saveTeamMeta(); persistCore(); refreshAllUI();
+  }
+}
+
+async function pullDeltaMeta() {
+  try {
+    const q = await sb.from('events').select('id,version,deleted,locked,locked_by_email,locked_at');
+    if (q.error) return { ok: false, offline: isNetErr(q.error), msg: q.error.message };
+    const staleIds = [];
+    (q.data || []).forEach(r => {
+      const id = String(r.id);
+      const curV = teamMeta.v[id];
+      if (r.deleted) {
+        if (curV !== undefined && r.version > curV) applyRemoteRow(r);
+      } else if (curV === undefined || r.version > curV) {
+        staleIds.push(id);
+      }
+    });
+    if (staleIds.length > 0) {
+      const d = await sb.from('events').select('id,data,version,deleted,updated_at,updated_by_email,locked,locked_by_email,locked_at').in('id', staleIds);
+      if (!d.error && d.data) {
+        let changed = 0;
+        d.data.forEach(r => { if (applyRemoteRow(r)) changed++; });
+        if (changed) { saveTeamMeta(); persistCore(); refreshAllUI(); }
+      }
     }
+    return { ok: true };
+  } catch (e) { return { ok: false, offline: true, msg: String(e.message || e) }; }
+}
+
+async function teamPull(pre) {
+  if (!sb || !teamSession || !teamRole) return false;
+  if (pre) {
+    let changed = 0;
+    pre.rows.forEach(r => { if (applyRemoteRow(r)) changed++; });
+    saveTeamMeta();
+    if (changed) { persistCore(); refreshAllUI(); }
+  } else {
+    const res = await pullDeltaMeta();
+    if (!res.ok) { setTeam(res.offline ? 'offline' : 'error', res.offline ? 'tidak dapat terhubung' : res.msg); return false; }
+  }
+  if (currentMainTab === 'audit') await pullLogs();
+  teamState.last = new Date();
+  if (!teamChannel && teamActive()) startTeamRealtime();
+  if (teamState.status !== 'online' && teamActive()) setTeam('online'); else renderSyncStatus();
+  return true;
+}
     function logFromRow(r) {
       return { id: r.id, ts: r.created_at, user: r.user_name || r.actor_email || '(tidak tercatat)', email: r.actor_email || '', actionType: r.action_type, eventTitle: r.event_title, fieldName: r.field_name, oldVal: r.old_val, newVal: r.new_val };
     }
@@ -3044,29 +3080,38 @@ function updateAdminButtons() {
       renderSyncStatus();
     }
     function onRealtimeEvent(p) {
-      const row = p && p.new;
-      if (!row || row.id === undefined) return;
-      if (!row.deleted && !row.data) { teamPull(); return; }                 // kolom besar tidak ikut dikirim -> tarik penuh
-      if (applyRemoteRow(row)) {
-        saveTeamMeta(); persistCore(); refreshAllUI();
-        const by = row.updated_by_email;
-        if (by && by !== myEmail()) showToast(`${by.split('@')[0]} ${row.deleted ? 'menghapus' : 'memperbarui'} kegiatan.`);
-      }
+  const row = p && p.new;
+  if (!row || row.id === undefined) return;
+  const id = String(row.id);
+  const by = row.updated_by_email;
+  if (!row.deleted && !row.data) {
+    pullSingleRow(id).then(() => {
+      if (by && by !== myEmail()) showToast(`${by.split('@')[0]} memperbarui kegiatan.`);
+    });
+    return;
+  }
+  if (applyRemoteRow(row)) {
+    saveTeamMeta(); persistCore(); refreshAllUI();
+    if (by && by !== myEmail()) showToast(`${by.split('@')[0]} ${row.deleted ? 'menghapus' : 'memperbarui'} kegiatan.`);
+  }
+}
+function onRealtimeLog(p) {
+  const row = p && p.new; if (!row || !row.id) return;
+  mergeLogs([logFromRow(row)]); persistLogsOnly();
+  const b = document.getElementById('badgeAuditCount'); if (b) b.innerText = auditLogs.length;
+  if (currentMainTab === 'audit') renderAuditLogTable(); else renderSyncStatus();
+}
+function startTeamPoll() {
+  clearInterval(teamPollTimer);
+  teamPollTimer = setInterval(async () => {
+    if (!sb || !teamSession || document.hidden) return;
+    if (!teamRole) { teamAfterSignIn(); return; }
+    if (teamActive()) {
+      await teamPull();
+      if (computeDirty().upserts.length || computeDirty().deletes.length) scheduleSync(200);
     }
-    function onRealtimeLog(p) {
-      const row = p && p.new; if (!row || !row.id) return;
-      mergeLogs([logFromRow(row)]); persistLogsOnly();
-      const b = document.getElementById('badgeAuditCount'); if (b) b.innerText = auditLogs.length;
-      if (currentMainTab === 'audit') renderAuditLogTable(); else renderSyncStatus();
-    }
-    function startTeamPoll() {
-      clearInterval(teamPollTimer);
-      teamPollTimer = setInterval(async () => {
-        if (!sb || !teamSession || document.hidden) return;
-        if (!teamRole) { teamAfterSignIn(); return; }
-        if (teamActive()) { await teamPull(); scheduleSync(100); }
-      }, 45000);
-    }
+  }, 60000);
+}
 
     // ---------- modal Tim ----------
     function openTeamModal() {
