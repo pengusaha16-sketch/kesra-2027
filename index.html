@@ -201,7 +201,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button onclick="exportToCSV()" class="flex px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-semibold items-center gap-1 transition" title="Unduh Excel CSV">
             <i class="fa-solid fa-file-excel"></i> CSV
           </button>
-          <button onclick="confirmResetDefault()" class="px-2 py-1.5 rounded-lg hover:bg-rose-100 text-slate-500 hover:text-rose-600 text-[13px] transition" title="Reset Data ke Awal">
+          <button id="btnResetDefault" style="display: none;" onclick="confirmResetDefault()" class="px-2 py-1.5 rounded-lg hover:bg-rose-100 text-slate-500 hover:text-rose-600 text-[13px] transition" title="Reset Data ke Awal">
             <i class="fa-solid fa-rotate-left"></i>
           </button>
         </div>
@@ -2570,7 +2570,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       showToast('Tindakan ini menimpa data seluruh tim dan hanya boleh dilakukan admin.', true);
       return false;
     }
-
+function updateAdminButtons() {
+  const btnReset = document.getElementById('btnResetDefault');
+  if (!btnReset) return;
+  const canReset = !teamActive() || teamRole === 'admin';
+  btnReset.style.display = canReset ? 'inline-flex' : 'none';
+}
     // ---------- konfigurasi & klien ----------
     function validateSbConfig(url, key) {
       if (!/^https:\/\/[A-Za-z0-9.-]+(:\d+)?\/?$/.test(url || '')) return 'URL harus berformat https://xxxx.supabase.co';
@@ -3217,6 +3222,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       }
       if (currentMainTab === 'audit') {
         renderAuditLogTable();
+      }
+      updateAdminButtons();
       }
       document.getElementById('badgeAuditCount').innerText = auditLogs.length;
     }
