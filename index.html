@@ -2522,7 +2522,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     const STORAGE_KEY_TEAM = 'kesra_2027_team_meta';
     const STORAGE_KEY_BACKUP = 'kesra_2027_backup_pre_team';
     const FIELD_LABELS = { formatMode: 'format pelaksanaan', report: 'laporan', title: 'judul', category: 'pilar', rawDate: 'tanggal', rawDateEnd: 'tanggal selesai', pic: 'PIC', location: 'lokasi', format: 'format', topic: 'topik', fundingSource: 'sumber dana', dipaShare: 'porsi DIPA', targetParticipants: 'target peserta', rabItems: 'RAB', readiness: 'kesiapan', execution: 'realisasi/AAR' };
-    let sb = null, teamSession = null, teamRole = null;
+    let sb = null, teamSession = null, teamRole = null; updateAdminButtons();
     let teamMeta = { v: {}, h: {}, connected: false, url: '', email: '', role: '' };   // v: id->versi server, h: id->hash terakhir tersinkron
     let teamState = { status: 'off', msg: '', last: null, busy: false, again: false, booting: false, online: [], showCfg: false };
     let teamChannel = null, teamPushTimer = null, teamPollTimer = null, teamInited = false;
@@ -2573,8 +2573,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 function updateAdminButtons() {
   const btnReset = document.getElementById('btnResetDefault');
   if (!btnReset) return;
-  const canReset = !teamActive() || teamRole === 'admin';
-  btnReset.style.display = canReset ? 'inline-flex' : 'none';
+  const isAdmin = String(teamRole || '').trim().toLowerCase() === 'admin';
+  btnReset.style.display = isAdmin ? 'inline-flex' : 'none';
 }
     // ---------- konfigurasi & klien ----------
     function validateSbConfig(url, key) {
@@ -2651,7 +2651,7 @@ function updateAdminButtons() {
         if (err) { setTeam('error', err); return; }
         sb = createSb();
         sb.auth.onAuthStateChange((evt, session) => {
-          if (evt === 'SIGNED_OUT') { teamSession = null; teamRole = null; stopTeamRealtime(); setTeam('signedout', 'Sesi berakhir.'); }
+          if (evt === 'SIGNED_OUT') { teamSession = null; teamRole = null; updateAdminButtons(); stopTeamRealtime(); setTeam('signedout', 'Sesi berakhir.'); }
           else if (session) teamSession = session;
         });
         const { data } = await sb.auth.getSession();
@@ -2685,7 +2685,7 @@ function updateAdminButtons() {
     async function teamSignOut() {
       stopTeamRealtime(); clearInterval(teamPollTimer); teamPollTimer = null;
       try { if (sb) await sb.auth.signOut(); } catch (e) { /* abaikan */ }
-      teamSession = null; teamRole = null;
+      teamSession = null; teamRole = null; updateAdminButtons();
       setTeam('signedout', 'Anda sudah keluar. Data lokal tetap ada.');
     }
     async function teamAfterSignIn() {
@@ -2697,13 +2697,13 @@ function updateAdminButtons() {
         teamMeta.url = syncCfg.url;
         const { data, error } = await sb.from('team_members').select('role,display_name').eq('email', email).maybeSingle();
         if (error) {
-          if (isNetErr(error) && teamMeta.connected && teamMeta.email === email && teamMeta.role) { teamRole = teamMeta.role; startTeamPoll(); setTeam('offline', 'tidak dapat terhubung'); return; }
+          if (isNetErr(error) && teamMeta.connected && teamMeta.email === email && teamMeta.role) { teamRole = teamMeta.role; updateAdminButtons(); startTeamPoll(); setTeam('offline', 'tidak dapat terhubung'); return; }
           startTeamPoll();
           setTeam(isNetErr(error) ? 'offline' : 'error', isNetErr(error) ? 'tidak dapat terhubung' : error.message);
           return;
         }
-        if (!data) { teamRole = null; setTeam('noaccess', `Akun ${email} belum terdaftar sebagai anggota tim. Minta admin menambahkannya ke tabel team_members.`); return; }
-        teamRole = data.role; teamMeta.email = email; teamMeta.role = data.role; saveTeamMeta();
+        if (!data) { teamRole = null; updateAdminButtons(); setTeam('noaccess', `Akun ${email} belum terdaftar sebagai anggota tim. Minta admin menambahkannya ke tabel team_members.`); return; }
+        teamRole = data.role; updateAdminButtons(); teamMeta.email = email; teamMeta.role = data.role; saveTeamMeta();
         if (!currentUser) {
           currentUser = (data.display_name || email.split('@')[0]).slice(0, 40);
           try { localStorage.setItem(STORAGE_KEY_USER, currentUser); } catch (e) { /* abaikan */ }
@@ -3046,7 +3046,7 @@ function updateAdminButtons() {
       try { localStorage.setItem(STORAGE_KEY_SYNC, JSON.stringify(syncCfg)); } catch (e2) { /* abaikan */ }
       saveTeamMeta();
       teamState.showCfg = false;
-      stopTeamRealtime(); teamSession = null; teamRole = null;
+      stopTeamRealtime(); teamSession = null; teamRole = null; updateAdminButtons();
       await teamBoot();
       renderTeamModal();
     }
@@ -3054,7 +3054,7 @@ function updateAdminButtons() {
       if (!confirm('Putuskan koneksi Supabase di perangkat ini? Data dan log lokal tetap ada.')) return;
       stopTeamRealtime(); clearInterval(teamPollTimer); teamPollTimer = null;
       try { if (sb) sb.auth.signOut(); } catch (e) { /* abaikan */ }
-      sb = null; teamSession = null; teamRole = null;
+      sb = null; teamSession = null; teamRole = null; updateAdminButtons();
       syncCfg = { url: '', key: '' };
       teamMeta = { v: {}, h: {}, connected: false, url: '', email: '', role: '' };
       try { localStorage.removeItem(STORAGE_KEY_SYNC); localStorage.removeItem(STORAGE_KEY_TEAM); } catch (e) { /* abaikan */ }
