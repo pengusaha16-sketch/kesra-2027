@@ -2912,13 +2912,14 @@ async function teamPull(pre) {
     // ---------- kirim (push) ----------
     async function pushOneEvent(ev, forceVersion, depth = 0) {
       const id = String(ev.id), payload = JSON.parse(JSON.stringify(ev)); delete payload.lock; const h = hash53(canon(payload));
-      const v = forceVersion !== undefined ? forceVersion : teamMeta.v[id];
-      let res;
-      try {
-        res = v === undefined
-          ? await sb.from('events').insert({ id, data: payload }).select('id,version').single()
-          : await sb.from('events').update({ data: payload, deleted: false }).eq('id', id).eq('version', v).select('id,version');
-      } catch (e) { return 'net'; }
+      const rawV = forceVersion !== undefined ? forceVersion : teamMeta.v[id];
+  const v = (rawV === null || rawV === undefined) ? undefined : Number(rawV);
+  let res;
+  try {
+    res = v === undefined
+      ? await sb.from('events').upsert({ id, data: payload, deleted: false }).select('id,version').single()
+      : await sb.from('events').update({ data: payload, deleted: false }).eq('id', id).eq('version', v).select('id,version');
+  } catch (e) { return 'net'; }
       if (res.error) {
         if (res.error.code === '23505') return depth < 2 ? await resolveConflict(ev, depth + 1) : 'conflict';
         if (isNetErr(res.error)) return 'net';
