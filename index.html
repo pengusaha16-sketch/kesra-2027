@@ -226,6 +226,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> 3. Audit Log & Monitoring Perubahan
           <span id="badgeAuditCount" class="px-1.5 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-800 font-bold">0</span>
         </button>
+        <button onclick="switchMainTab('chat')" id="tabBtn-chat" class="main-tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white hover:text-kemenkeu-600 flex items-center gap-2 transition shrink-0">
+            <i class="fa-solid fa-comments text-sky-600"></i> 4. Diskusi &amp; Koordinasi Tim
+            <span id="badgeChatCount" class="hidden px-1.5 py-0.5 text-xs rounded-full bg-rose-500 text-white font-bold">0</span>
+          </button>
       </nav>
     </div>
   </header>
@@ -675,7 +679,56 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </div>
       </div>
     </div>
+<div id="mainView-chat" class="hidden space-y-6">
+      <div class="kemenkeu-card rounded-2xl overflow-hidden flex flex-col" style="height: 70vh; min-height: 500px;">
+        <!-- Header Ruang Diskusi -->
+        <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h3 class="text-base font-bold text-kemenkeu-600 flex items-center gap-2">
+              <i class="fa-solid fa-comments text-sky-600"></i> Ruang Koordinasi &amp; Diskusi Tim KESRA 2027
+            </h3>
+            <p class="text-xs text-slate-500">Komunikasi internal real-time lintas anggota tim &amp; penanggung jawab pilar</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="chatFilterPilar" onchange="renderTeamMessages()" aria-label="Filter Topik Pilar" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700">
+              <option value="ALL">Semua Topik / Pilar</option>
+              <option value="Umum">Umum &amp; Koordinasi</option>
+              <option value="Pilar 1">Pilar 1 - Kesejahteraan &amp; Apresiasi</option>
+              <option value="Pilar 2">Pilar 2 - Literasi Keuangan</option>
+              <option value="Pilar 3">Pilar 3 - Perumahan &amp; Asuransi</option>
+              <option value="Pilar 4">Pilar 4 - Pelitakeu &amp; Budaya</option>
+              <option value="Pilar 5">Pilar 5 - Layanan &amp; Kepatuhan</option>
+              <option value="Pilar 6">Pilar 6 - Evaluasi &amp; Tata Kelola</option>
+            </select>
+            <button onclick="loadTeamMessages()" title="Muat ulang pesan" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-rotate"></i> Segarkan
+            </button>
+          </div>
+        </div>
 
+        <!-- Area Daftar Pesan -->
+        <div id="teamChatBox" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 bg-slate-50/50">
+          <div class="text-center text-xs text-slate-400 py-10">Memuat riwayat percakapan tim...</div>
+        </div>
+
+        <!-- Form Kirim Pesan -->
+        <form onsubmit="sendTeamMessage(event)" class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row gap-2">
+          <select id="chatInputPilar" aria-label="Pilih Pilar" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 shrink-0">
+            <option value="Umum">Topik: Umum</option>
+            <option value="Pilar 1">Pilar 1</option>
+            <option value="Pilar 2">Pilar 2</option>
+            <option value="Pilar 3">Pilar 3</option>
+            <option value="Pilar 4">Pilar 4</option>
+            <option value="Pilar 5">Pilar 5</option>
+            <option value="Pilar 6">Pilar 6</option>
+          </select>
+          <input id="chatInputText" type="text" required maxlength="1000" placeholder="Tulis pesan koordinasi untuk tim..." class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-kemenkeu-600 focus:bg-white">
+          <button type="submit" id="btnSendChat" class="px-5 py-2 rounded-xl bg-kemenkeu-600 hover:bg-kemenkeu-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition shrink-0 shadow-sm">
+            <i class="fa-solid fa-paper-plane"></i> Kirim
+          </button>
+        </form>
+      </div>
+    </div>
   </main>
 
   <!-- ========================================================================= -->
@@ -3150,7 +3203,7 @@ function updateAdminButtons() {
     // =========================================================================
     function switchMainTab(tabName) {
       currentMainTab = tabName;
-      ['planning', 'execution', 'audit'].forEach(t => {
+      ['planning', 'execution', 'audit', 'chat'].forEach(t => {
         const viewEl = document.getElementById(`mainView-${t}`);
         const btnEl = document.getElementById(`tabBtn-${t}`);
         if (t === tabName) {
@@ -3161,7 +3214,12 @@ function updateAdminButtons() {
           btnEl.className = 'main-tab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white hover:text-kemenkeu-600 flex items-center gap-2 transition shrink-0';
         }
       });
-
+     });
+  if (tabName === 'chat') {
+    unreadChatCount = 0;
+    updateChatBadge();
+    loadTeamMessages();
+  }
       if (tabName === 'execution') {
         renderExecutionTable();
         try { renderAarAnalytics(); } catch (e) { console.warn('Grafik AAR tidak dapat digambar:', e); }
@@ -5109,6 +5167,167 @@ function updateAdminButtons() {
     document.addEventListener('DOMContentLoaded', () => MODAL_IDS.forEach(id => {
       const m = document.getElementById(id); if (m) { m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); }
     }));
+    // =========================================================================
+// FITUR CHAT & KOORDINASI TIM (REAL-TIME SUPABASE)
+// =========================================================================
+let teamMessagesCache = [];
+let unreadChatCount = 0;
+let chatRealtimeChannel = null;
+
+function escapeChatHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function getActiveSenderName() {
+  if (typeof teamDisplayName !== 'undefined' && teamDisplayName) return teamDisplayName;
+  const badgeEl = document.getElementById('teamMemberBadge') || document.getElementById('teamUserNameDisplay');
+  if (badgeEl && badgeEl.innerText.trim()) return badgeEl.innerText.trim();
+  if (teamSession && teamSession.user && teamSession.user.email) {
+    return teamSession.user.email.split('@')[0];
+  }
+  return 'Anggota Tim';
+}
+
+function updateChatBadge() {
+  const badge = document.getElementById('badgeChatCount');
+  if (!badge) return;
+  if (unreadChatCount > 0) {
+    badge.innerText = unreadChatCount > 99 ? '99+' : unreadChatCount;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+async function loadTeamMessages() {
+  const box = document.getElementById('teamChatBox');
+  if (!box) return;
+  if (typeof sb === 'undefined' || !teamSession) {
+    box.innerHTML = '<div class="text-center text-xs text-amber-600 py-10">Silakan masuk ke sesi tim terlebih dahulu untuk melihat dan mengirim pesan.</div>';
+    return;
+  }
+
+  const { data, error } = await sb
+    .from('team_messages')
+    .select('*')
+    .order('created_at', { ascending: true })
+    .limit(200);
+
+  if (error) {
+    box.innerHTML = `<div class="text-center text-xs text-rose-600 py-10">Gagal memuat chat: ${escapeChatHtml(error.message)}</div>`;
+    return;
+  }
+
+  teamMessagesCache = data || [];
+  renderTeamMessages();
+}
+
+function renderTeamMessages() {
+  const box = document.getElementById('teamChatBox');
+  if (!box) return;
+
+  const filterPilar = document.getElementById('chatFilterPilar')?.value || 'ALL';
+  const myName = getActiveSenderName().toLowerCase();
+
+  const filtered = filterPilar === 'ALL'
+    ? teamMessagesCache
+    : teamMessagesCache.filter(m => (m.pilar || 'Umum') === filterPilar);
+
+  if (filtered.length === 0) {
+    box.innerHTML = '<div class="text-center text-xs text-slate-400 py-12">Belum ada pesan pada topik ini. Mulai diskusi dengan mengirim pesan di bawah!</div>';
+    return;
+  }
+
+  box.innerHTML = filtered.map(msg => {
+    const isMe = String(msg.sender_name || '').trim().toLowerCase() === myName;
+    const isAdminMsg = String(msg.sender_role || '').toLowerCase() === 'admin';
+    const timeStr = msg.created_at
+      ? new Date(msg.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+      : '';
+
+    return `
+      <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+        <div class="flex items-center gap-1.5 mb-1 px-1">
+          <span class="text-[11px] font-bold ${isMe ? 'text-kemenkeu-600' : 'text-slate-700'}">${escapeChatHtml(msg.sender_name)}</span>
+          ${isAdminMsg ? '<span class="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">Admin</span>' : ''}
+          <span class="px-1.5 py-0.2 rounded bg-slate-200/80 text-slate-600 text-[10px] font-semibold">${escapeChatHtml(msg.pilar || 'Umum')}</span>
+          <span class="text-[10px] text-slate-400">${timeStr}</span>
+        </div>
+        <div class="max-w-[82%] sm:max-w-[70%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
+          isMe
+            ? 'bg-kemenkeu-600 text-white rounded-tr-sm'
+            : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
+        }">
+          ${escapeChatHtml(msg.message).replace(/\n/g, '<br>')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendTeamMessage(e) {
+  e.preventDefault();
+  if (typeof sb === 'undefined' || !teamSession) {
+    alert('Anda harus login sesi tim terlebih dahulu untuk mengirim pesan.');
+    return;
+  }
+
+  const inputEl = document.getElementById('chatInputText');
+  const pilarEl = document.getElementById('chatInputPilar');
+  const btnEl = document.getElementById('btnSendChat');
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  btnEl.disabled = true;
+  const payload = {
+    sender_name: getActiveSenderName(),
+    sender_role: String(teamRole || 'member').toLowerCase(),
+    pilar: pilarEl ? pilarEl.value : 'Umum',
+    message: text
+  };
+
+  const { data, error } = await sb.from('team_messages').insert([payload]).select();
+  btnEl.disabled = false;
+
+  if (error) {
+    alert('Gagal mengirim pesan: ' + error.message);
+    return;
+  }
+
+  inputEl.value = '';
+  if (data && data[0] && !teamMessagesCache.some(m => m.id === data[0].id)) {
+    teamMessagesCache.push(data[0]);
+    renderTeamMessages();
+  }
+}
+
+function initTeamChatRealtime() {
+  if (typeof sb === 'undefined' || chatRealtimeChannel) return;
+  chatRealtimeChannel = sb
+    .channel('public:team_messages')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'team_messages' }, payload => {
+      const newMsg = payload.new;
+      if (!newMsg || teamMessagesCache.some(m => m.id === newMsg.id)) return;
+      teamMessagesCache.push(newMsg);
+
+      if (currentMainTab === 'chat') {
+        renderTeamMessages();
+      } else {
+        unreadChatCount++;
+        updateChatBadge();
+      }
+    })
+    .subscribe();
+}
+
+// Jalankan listener realtime otomatis setelah halaman siap
+setTimeout(() => { initTeamChatRealtime(); }, 2500);
   </script>
 </body>
 </html>
