@@ -2559,7 +2559,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
     // ---------- izin ----------
     function teamActive() { return !!(sb && teamSession && teamRole && teamMeta.connected); }
-    function canEdit() { return !teamActive() || teamRole === 'admin' || teamRole === 'editor'; }
+    function canEdit() { const r = String(teamRole || '').trim().toLowerCase(); return !teamActive() || r === 'admin' || r === 'editor' || r.includes('admin') || r.includes('editor'); }
     function guardEdit() {
       if (canEdit()) return true;
       showToast('Akun Anda berperan "viewer" (hanya lihat). Hubungi admin bila perlu akses ubah.', true);
