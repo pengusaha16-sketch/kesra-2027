@@ -4824,7 +4824,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     // Semua fungsi lama tetap; bagian ini hanya menambah. Perlu supabase_migrasi_fitur_baru.sql.
     // =========================================================================
     function isLocked(ev) { return !!(ev && ev.lock && ev.lock.locked); }
-    function isAdminUser() { return teamActive() && teamRole === 'admin'; }
+    function isAdminUser() { return teamActive() && String(teamRole || '').trim().toLowerCase() === 'admin'; }
     function lockFromRow(r) { return { locked: !!(r && r.locked), by: (r && r.locked_by_email) || '', at: (r && r.locked_at) || '' }; }
     function guardUnlocked(ev, verb) {
       if (!isLocked(ev)) return true;
@@ -4876,10 +4876,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
     function detailExtras(ev) {
       const b = 'px-3 py-2 rounded-xl font-semibold text-xs transition flex items-center gap-1 ';
-      return `<button onclick="toggleModal('detailModal'); openDocsModal('${ev.id}')" class="${b}bg-sky-100 text-sky-800 hover:bg-sky-200"><i class="fa-solid fa-paperclip"></i> Dokumentasi</button>` +
-             `<button onclick="toggleModal('detailModal'); openReportModal('${ev.id}')" class="${b}bg-indigo-100 text-indigo-800 hover:bg-indigo-200"><i class="fa-solid fa-file-lines"></i> Laporan</button>` +
-             ((isAdminUser() || isLocked(ev)) ? `<button onclick="toggleLock('${ev.id}')" class="${b}${isLocked(ev) ? 'bg-rose-100 text-rose-800 hover:bg-rose-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}"><i class="fa-solid ${isLocked(ev) ? 'fa-lock' : 'fa-lock-open'}"></i> ${isLocked(ev) ? (isAdminUser() ? 'Buka Kunci' : 'TERKUNCI') : 'Kunci Data'}</button>` : '');
-    }
+      return ((isAdminUser() || isLocked(ev)) ? `<button onclick="toggleLock('${ev.id}')" class="${b}${isLocked(ev) ? 'bg-rose-100 text-rose-800 hover:bg-rose-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}"><i class="fa-solid ${isLocked(ev) ? 'fa-lock-open' : 'fa-lock'}"></i> ${isLocked(ev) ? 'Buka Kunci' : 'Kunci Data'}</button>` : '');  }
     function lockBadge(e) { return isLocked(e) ? ` <span class="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200" title="Dikunci admin${e.lock.by ? ': ' + esc(e.lock.by) : ''}"><i class="fa-solid fa-lock"></i> TERKUNCI</span>` : ''; }
 
     // ---------- kendala "Lainnya" ----------
