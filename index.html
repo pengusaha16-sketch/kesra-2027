@@ -370,7 +370,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button onclick="openKakModal('penghargaan')" class="p-3 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100/95 hover:-translate-y-0.5 text-left transition-all group shadow-sm">
             <div class="flex items-center justify-between mb-1">
               <span class="w-6 h-6 rounded-lg bg-rose-600 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-award"></i></span>
-              <span class="text-xs font-bold text-rose-700 bg-white px-1.5 py-0.5 rounded">1x</span>
+              <span id="kakCount-penghargaan" class="text-xs font-bold text-rose-700 bg-white px-1.5 py-0.5 rounded">1x</span>
             </div>
             <span class="font-bold text-xs text-rose-900 block">Penghargaan</span>
             <span class="text-xs text-rose-700">PIC: Raisa (All team)</span>
@@ -379,7 +379,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button onclick="openKakModal('jasindo')" class="p-3 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/95 hover:-translate-y-0.5 text-left transition-all group shadow-sm">
             <div class="flex items-center justify-between mb-1">
               <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-shield-halved"></i></span>
-              <span class="text-xs font-bold text-indigo-700 bg-white px-1.5 py-0.5 rounded">2x</span>
+              <span id="kakCount-jasindo" class="text-xs font-bold text-indigo-700 bg-white px-1.5 py-0.5 rounded">2x</span>
             </div>
             <span class="font-bold text-xs text-indigo-900 block">Jasindo</span>
             <span class="text-xs text-indigo-700">PIC: Bang Nur</span>
@@ -388,7 +388,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button onclick="openKakModal('taspen')" class="p-3 rounded-xl border border-purple-200 bg-purple-50/70 hover:bg-purple-100/95 hover:-translate-y-0.5 text-left transition-all group shadow-sm">
             <div class="flex items-center justify-between mb-1">
               <span class="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-handshake"></i></span>
-              <span class="text-xs font-bold text-purple-700 bg-white px-1.5 py-0.5 rounded">3x</span>
+              <span id="kakCount-taspen" class="text-xs font-bold text-purple-700 bg-white px-1.5 py-0.5 rounded">3x</span>
             </div>
             <span class="font-bold text-xs text-purple-900 block">Taspen</span>
             <span class="text-xs text-purple-700">PIC: Ayu</span>
@@ -397,7 +397,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button onclick="openKakModal('literasi')" class="p-3 rounded-xl border border-sky-200 bg-sky-50/70 hover:bg-sky-100/95 hover:-translate-y-0.5 text-left transition-all group shadow-sm">
             <div class="flex items-center justify-between mb-1">
               <span class="w-6 h-6 rounded-lg bg-sky-600 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-coins"></i></span>
-              <span class="text-xs font-bold text-sky-700 bg-white px-1.5 py-0.5 rounded">6 Batch</span>
+              <span id="kakCount-literasi" data-suffix=" Batch" class="text-xs font-bold text-sky-700 bg-white px-1.5 py-0.5 rounded">6 Batch</span>
             </div>
             <span class="font-bold text-xs text-sky-900 block">Literasi Keuangan</span>
             <span class="text-xs text-sky-700">PIC: Raisa</span>
@@ -406,7 +406,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button onclick="openKakModal('pelitakeu')" class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/95 hover:-translate-y-0.5 text-left transition-all group shadow-sm">
             <div class="flex items-center justify-between mb-1">
               <span class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-seedling"></i></span>
-              <span class="text-xs font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded">Sem & Fest</span>
+              <span id="kakCount-pelitakeu" class="text-xs font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded">Sem &amp; Fest</span>
             </div>
             <span class="font-bold text-xs text-emerald-900 block">Pelitakeu</span>
             <span class="text-xs text-emerald-700">PIC: Ayu & Wahyu</span>
@@ -415,7 +415,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button onclick="openKakModal('sejiwa')" class="p-3 rounded-xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100/95 hover:-translate-y-0.5 text-left transition-all group shadow-sm">
             <div class="flex items-center justify-between mb-1">
               <span class="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-heart-pulse"></i></span>
-              <span class="text-xs font-bold text-amber-700 bg-white px-1.5 py-0.5 rounded">6 Batch</span>
+              <span id="kakCount-sejiwa" data-suffix=" Batch" class="text-xs font-bold text-amber-700 bg-white px-1.5 py-0.5 rounded">6 Batch</span>
             </div>
             <span class="font-bold text-xs text-amber-900 block">Sejiwa</span>
             <span class="text-xs text-amber-700">PIC: Yadi</span>
@@ -3312,7 +3312,32 @@ function startTeamPoll() {
       document.getElementById('slicerRegion').value = 'all';
       setFilter('all');
     }
+function updateKakPillarCounts() {
+  const counts = {
+    'penghargaan': 0,
+    'jasindo': 0,
+    'taspen': 0,
+    'literasi': 0,
+    'pelitakeu': 0,
+    'sejiwa': 0
+  };
 
+  (eventsData || []).forEach(ev => {
+    if (!ev || ev.deleted) return;
+    const raw = String(ev.pillar || ev.pilar || '').toLowerCase().trim();
+    const slug = raw === 'literasi keuangan' ? 'literasi' : raw.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (Object.prototype.hasOwnProperty.call(counts, slug)) {
+      counts[slug] += 1;
+    }
+  });
+
+  Object.entries(counts).forEach(([slug, total]) => {
+    const el = document.getElementById(`kakCount-${slug}`);
+    if (!el) return;
+    const suffix = el.dataset.suffix || 'x';
+    el.textContent = `${total}${suffix}`;
+  });
+}
     function refreshAllUI() {
       updateStrategicKpis();
       renderCalendarGrid();
@@ -3329,6 +3354,7 @@ function startTeamPoll() {
       updateAdminButtons();
       
       document.getElementById('badgeAuditCount').innerText = auditLogs.length;
+      if (typeof updateKakPillarCounts === 'function') updateKakPillarCounts();
     }
 
     function updateStrategicKpis() {
