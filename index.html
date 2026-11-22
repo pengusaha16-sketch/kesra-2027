@@ -5252,7 +5252,31 @@ function escapeChatHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+function formatChatMessage(rawText) {
+  const escaped = escapeChatHtml(rawText);
+  const lines = escaped.split(/\r?\n/);
 
+  return lines.map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      return '<div class="h-2"></div>';
+    }
+
+    const withInline = line
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+      .replace(/(^|[^*])\*(?!\s)([^*]+?)(?<!\s)\*(?!\*)/g, '$1<em class="italic">$2</em>');
+
+    const bulletMatch = line.match(/^\s*[-*•]\s+(.+)$/);
+    if (bulletMatch) {
+      const bulletText = bulletMatch[1]
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+        .replace(/(^|[^*])\*(?!\s)([^*]+?)(?<!\s)\*(?!\*)/g, '$1<em class="italic">$2</em>');
+      return `<div class="flex items-start gap-1.5 pl-1 my-0.5"><span class="select-none">•</span><span>${bulletText}</span></div>`;
+    }
+
+    return `<div class="leading-relaxed my-0.5">${withInline}</div>`;
+  }).join('');
+}
 function getActiveSenderName() {
   if (typeof teamDisplayName !== 'undefined' && teamDisplayName) return teamDisplayName;
   const badgeEl = document.getElementById('teamMemberBadge') || document.getElementById('teamUserNameDisplay');
@@ -5333,7 +5357,7 @@ function renderTeamMessages() {
             ? 'bg-kemenkeu-600 text-white rounded-tr-sm'
             : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
         }">
-          ${escapeChatHtml(msg.message).replace(/\n/g, '<br>')}
+          ${formatChatMessage(msg.message)}
         </div>
       </div>
     `;
