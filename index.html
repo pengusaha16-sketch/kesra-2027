@@ -3324,7 +3324,7 @@ function updateKakPillarCounts() {
 
   (eventsData || []).forEach(ev => {
     if (!ev || ev.deleted) return;
-    const raw = String(ev.pillar || ev.pilar || '').toLowerCase().trim();
+    const raw = String(ev.category || ev.pillar || ev.pilar || '').toLowerCase().trim();
     const slug = raw === 'literasi keuangan' ? 'literasi' : raw.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     if (Object.prototype.hasOwnProperty.call(counts, slug)) {
       counts[slug] += 1;
