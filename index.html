@@ -722,8 +722,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <option value="Pilar 5">Pilar 5</option>
             <option value="Pilar 6">Pilar 6</option>
           </select>
-          <input id="chatInputText" type="text" required maxlength="1000" placeholder="Tulis pesan koordinasi untuk tim..." class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-kemenkeu-600 focus:bg-white">
-          <button type="submit" id="btnSendChat" class="px-5 py-2 rounded-xl bg-kemenkeu-600 hover:bg-kemenkeu-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition shrink-0 shadow-sm">
+          <textarea id="chatInputText" rows="3" required maxlength="1000" placeholder="Tulis pesan koordinasi untuk tim... (Enter kirim, Shift+Enter baris baru)" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-kemenkeu-500 resize-y min-h-[72px] max-h-[160px] leading-relaxed"></textarea>          <button type="submit" id="btnSendChat" class="px-5 py-2 rounded-xl bg-kemenkeu-600 hover:bg-kemenkeu-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition shrink-0 shadow-sm">
             <i class="fa-solid fa-paper-plane"></i> Kirim
           </button>
         </form>
@@ -5423,6 +5422,31 @@ function initTeamChatRealtime() {
 
 // Jalankan listener realtime otomatis setelah halaman siap
 setTimeout(() => { initTeamChatRealtime(); }, 2500);
+    (function bindChatTextareaShortcuts() {
+  function attach() {
+    const chatInputEl = document.getElementById('chatInputText');
+    if (!chatInputEl || chatInputEl.dataset.shortcutBound === '1') return;
+    chatInputEl.dataset.shortcutBound = '1';
+
+    chatInputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const formEl = this.closest('form');
+        if (formEl && typeof formEl.requestSubmit === 'function') {
+          formEl.requestSubmit();
+        } else if (typeof sendTeamMessage === 'function') {
+          sendTeamMessage(e);
+        }
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attach);
+  } else {
+    attach();
+  }
+})();
   </script>
 </body>
 </html>
