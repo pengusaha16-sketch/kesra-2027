@@ -420,9 +420,53 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <span class="font-bold text-xs text-amber-900 block">Sejiwa</span>
             <span class="text-xs text-amber-700">PIC: Yadi</span>
           </button>
+          <button onclick="openKakModal('slks')" class="p-3 rounded-xl border border-cyan-200 bg-cyan-50/70 hover:bg-cyan-100/95 hover:-translate-y-0.5 text-left transition-all group shadow-sm">
+  <div class="flex items-center justify-between mb-1">
+    <span class="w-6 h-6 rounded-lg bg-cyan-600 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-hand-holding-heart"></i></span>
+    <span id="kakCount-slks" class="text-xs font-bold text-cyan-700 bg-white px-1.5 py-0.5 rounded">0x</span>
+  </div>
+  <span class="font-bold text-xs text-cyan-900 block">Pilar SLKS</span>
+  <span class="text-xs text-cyan-700">Sistem Layanan Kesejahteraan</span>
+</button>
         </div>
       </section>
-
+<!-- PILAR SLKS : SISTEM LAYANAN KESEJAHTERAAN -->
+<section id="slksSection" class="kemenkeu-card p-5 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50/60 to-white">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+    <div>
+      <h2 class="text-sm font-bold text-cyan-800 flex items-center gap-2"><i class="fa-solid fa-hand-holding-heart text-cyan-600"></i> Pilar SLKS &mdash; Sistem Layanan Kesejahteraan</h2>
+      <p class="text-xs text-slate-500 mt-0.5">Satu pintu layanan kesejahteraan: pengajuan, verifikasi, penyaluran, dan tindak lanjut. Data di bawah otomatis mengikuti event berkategori Pilar SLKS.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="openSlksAddEvent()" class="px-3 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"><i class="fa-solid fa-plus"></i> Tambah Layanan SLKS</button>
+      <button onclick="openKakModal('slks')" class="px-3 py-2 rounded-xl bg-white border border-cyan-300 text-cyan-700 text-xs font-bold flex items-center gap-1.5 transition"><i class="fa-solid fa-file-signature"></i> KAK SLKS</button>
+      <button onclick="setFilter('slks'); document.getElementById('slksSection').scrollIntoView({behavior:'smooth'})" class="px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold transition">Lihat Semua Event SLKS</button>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div class="p-3 rounded-xl bg-white border border-cyan-100"><p class="text- font-semibold text-slate-500">Total Layanan / Event</p><p id="slksTotalEvents" class="text-xl font-bold text-cyan-800">0</p><p class="text- text-slate-400">event berkategori SLKS</p></div>
+    <div class="p-3 rounded-xl bg-white border border-cyan-100"><p class="text- font-semibold text-slate-500">Total Anggaran SLKS</p><p id="slksTotalBudget" class="text-xl font-bold text-cyan-800">Rp 0</p><p class="text- text-slate-400">dari RAB seluruh event SLKS</p></div>
+    <div class="p-3 rounded-xl bg-white border border-cyan-100"><p class="text- font-semibold text-slate-500">Sudah Terlaksana</p><p id="slksExecuted" class="text-xl font-bold text-emerald-700">0</p><p class="text- text-slate-400">berdasarkan status realisasi</p></div>
+    <div class="p-3 rounded-xl bg-white border border-cyan-100"><p class="text- font-semibold text-slate-500">Target Peserta</p><p id="slksTargetPeserta" class="text-xl font-bold text-cyan-800">0 orang</p><p class="text- text-slate-400">akumulasi target peserta</p></div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    <div class="p-3 rounded-xl bg-white border border-slate-200">
+      <h3 class="text-xs font-bold text-slate-700 mb-2"><i class="fa-solid fa-list-check text-cyan-600"></i> Jenis Layanan SLKS</h3>
+      <div class="flex flex-wrap gap-1.5 text- font-semibold">
+        <span class="px-2 py-1 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200">Pengajuan Layanan</span>
+        <span class="px-2 py-1 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200">Verifikasi &amp; Validasi</span>
+        <span class="px-2 py-1 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200">Penyaluran Manfaat</span>
+        <span class="px-2 py-1 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200">Konsultasi &amp; Pengaduan</span>
+        <span class="px-2 py-1 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200">Monitoring &amp; Tindak Lanjut</span>
+      </div>
+      <p class="text- text-slate-500 mt-2">Tuliskan jenis layanan di judul / topik event agar mudah dicari, contoh: <em>&ldquo;SLKS &mdash; Penyaluran Manfaat &hellip;&rdquo;</em></p>
+    </div>
+    <div class="p-3 rounded-xl bg-white border border-slate-200">
+      <h3 class="text-xs font-bold text-slate-700 mb-2"><i class="fa-solid fa-calendar-day text-cyan-600"></i> Event SLKS Terdekat</h3>
+      <div id="slksUpcomingList" class="space-y-1.5 text-xs text-slate-600"><p class="text-slate-400">Belum ada event Pilar SLKS. Klik &ldquo;Tambah Layanan SLKS&rdquo; untuk membuat yang pertama.</p></div>
+    </div>
+  </div>
+</section>
       <!-- GLOBAL SLICERS (MULTI-DIMENSIONAL FILTERS) & CONTROLS -->
       <section class="no-print kemenkeu-card p-4 rounded-2xl border border-slate-200 space-y-3">
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
@@ -435,6 +479,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <button onclick="setFilter('literasi')" data-filter="literasi" class="filter-btn px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 font-medium transition">Literasi</button>
             <button onclick="setFilter('pelitakeu')" data-filter="pelitakeu" class="filter-btn px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 font-medium transition">Pelitakeu</button>
             <button onclick="setFilter('sejiwa')" data-filter="sejiwa" class="filter-btn px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 font-medium transition">Sejiwa</button>
+           <button onclick="setFilter('slks')" data-filter="slks" class="filter-btn px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 font-medium transition">Pilar SLKS</button>
             <button onclick="setFilter('internal')" data-filter="internal" class="filter-btn px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 font-medium transition">Evaluasi & Perencanaan</button>
           </div>
 
@@ -699,6 +744,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
               <option value="Pilar 4">Pilar 4 - Pelitakeu &amp; Budaya</option>
               <option value="Pilar 5">Pilar 5 - Layanan &amp; Kepatuhan</option>
               <option value="Pilar 6">Pilar 6 - Evaluasi &amp; Tata Kelola</option>
+              <option value="Pilar SLKS">Pilar SLKS</option>
             </select>
             <button onclick="loadTeamMessages()" title="Muat ulang pesan" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
               <i class="fa-solid fa-rotate"></i> Segarkan
@@ -764,6 +810,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                 <option value="literasi">Workshop Literasi Keuangan</option>
                 <option value="pelitakeu">Pelitakeu (Seminar / Festival)</option>
                 <option value="sejiwa">Sejiwa</option>
+                <option value="slks">Pilar SLKS (Sistem Layanan Kesejahteraan)</option>
               </select>
             </div>
           </div>
@@ -1236,6 +1283,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <button onclick="renderKakContent('pelitakeu')" data-kak="pelitakeu" class="kak-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition">Pelitakeu</button>
         <button onclick="renderKakContent('sejiwa')" data-kak="sejiwa" class="kak-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition">Sejiwa</button>
         <button onclick="renderKakContent('internal')" data-kak="internal" class="kak-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition">Evaluasi & Perencanaan</button>
+        <button onclick="renderKakContent('slks')" data-kak="slks" class="kak-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition">Pilar SLKS</button>
       </div>
 
       <div id="kakDocumentBody" contenteditable="true" class="p-6 overflow-y-auto space-y-5 text-sm text-slate-800 bg-white flex-grow leading-relaxed focus:outline-none"></div>
@@ -1850,6 +1898,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
     // TEMPLATE KAK SESUAI PETA KESRA EVENT 2027
     const kakTemplates = {
+      slks: {
+  pilarName: "PILAR SLKS — SISTEM LAYANAN KESEJAHTERAAN (PIC: TIM KESRA)",
+  namaKegiatan: "SISTEM LAYANAN KESEJAHTERAAN (SLKS) 2027 — SATU PINTU LAYANAN KESEJAHTERAAN PEGAWAI",
+  tagline: "\"Satu Pintu, Cepat, Transparan — Layanan Kesejahteraan untuk Semua Pegawai\"",
+  dasarHukum: "UU No. 20/2023 tentang ASN; Program Kerja Subbagian Kesejahteraan 2027; ketentuan pengelolaan anggaran dan layanan kepegawaian Kemenkeu yang berlaku.",
+  gambaranUmum: "Pilar SLKS mengintegrasikan pengajuan, verifikasi, penyaluran manfaat, konsultasi/pengaduan, serta monitoring tindak lanjut layanan kesejahteraan pegawai dalam satu alur yang terdokumentasi dan terukur.",
+  alasanKolaborasi: "Melibatkan Subbagian Kesejahteraan, PIC seluruh pilar, pengelola kepegawaian unit Eselon I, dan mitra layanan (【entity-Taspen¦canonical_name=Taspen】, Jasindo) sesuai jenis layanan yang diajukan.",
+  tujuanUmum: "Mewujudkan layanan kesejahteraan pegawai yang cepat, transparan, akuntabel, dan mudah diakses.",
+  tujuanKhusus: "Setiap pengajuan layanan SLKS tercatat, terverifikasi, ditindaklanjuti sesuai SLA, dan terdokumentasi dalam dashboard KESRA 2027.",
+  metode: "Layanan satu pintu (onsite & daring): intake pengajuan, verifikasi berkas, penjadwalan layanan, penyaluran manfaat, dan monitoring tindak lanjut.",
+  waktuTempat: "Sesuai jadwal event SLKS pada calendar (Kantor Pusat Kemenkeu / daring).",
+  targetPeserta: "Pegawai 【entity-Kementerian Keuangan¦canonical_name=Kementerian Keuangan】 pengaju layanan kesejahteraan (sesuai target peserta tiap event SLKS).",
+  materi: "Alur pengajuan SLKS, persyaratan & dokumen layanan, SLA verifikasi dan penyaluran, kanal konsultasi & pengaduan, serta mekanisme monitoring.",
+  narasumber: "Tim Subbagian Kesejahteraan Bagian PPDPR dan mitra layanan terkait.",
+  peran: "Subbag Kesejahteraan (koordinator SLKS), PIC pilar, pengelola kepegawaian unit, dan mitra layanan.",
+  rantaiHasil: "Masukan (Pengajuan & Berkas) ➔ Proses (Verifikasi & Layanan) ➔ Output (Manfaat Tersalurkan & Terlayani) ➔ Dampak (Kesejahteraan & Kepercayaan Pegawai Meningkat).",
+  keluaranLangsung: "Pengajuan layanan terverifikasi, manfaat tersalurkan, dan pengaduan/konsultasi tertindaklanjuti.",
+  produkPengetahuan: "Panduan Layanan SLKS 2027, Daftar Layanan & Persyaratan, dan Rekap Monitoring SLKS.",
+  dampak: "Akses layanan kesejahteraan lebih cepat dan transparan; beban administrasi pegawai berkurang."
+},
       internal: {
         pilarName: "EVALUASI & PERENCANAAN INTERNAL (2x • PIC: YADI / ALL TEAM)",
         namaKegiatan: "EVALUASI KEGIATAN KESRA 2027 DAN PENYUSUNAN CALENDAR EVENT KESRA 2028",
@@ -3318,6 +3386,7 @@ function updateKakPillarCounts() {
     'taspen': 0,
     'literasi': 0,
     'pelitakeu': 0,
+    'slks': 0,
     'sejiwa': 0
   };
 
@@ -3354,6 +3423,7 @@ function updateKakPillarCounts() {
       
       document.getElementById('badgeAuditCount').innerText = auditLogs.length;
       if (typeof updateKakPillarCounts === 'function') updateKakPillarCounts();
+      if (typeof renderSlksSection === 'function') renderSlksSection();
     }
 
     function updateStrategicKpis() {
@@ -4417,7 +4487,38 @@ function updateKakPillarCounts() {
       renderKakContent(pillarKey);
       document.getElementById('kakModal').classList.remove('hidden');
     }
-
+// ================= PILAR SLKS =================
+function getSlksEvents() { return (typeof eventsData !== 'undefined' ? eventsData : []).filter(e => e.category === 'slks'); }
+function openSlksAddEvent() {
+  if (typeof openAddModal === 'function') openAddModal();
+  setTimeout(() => {
+    const cat = document.getElementById('formCategory');
+    if (cat) { cat.value = 'slks'; cat.dispatchEvent(new Event('change')); }
+    const title = document.getElementById('formTitle');
+    if (title && !title.value) title.value = 'SLKS — ';
+    if (title) title.focus();
+  }, 80);
+}
+function renderSlksSection() {
+  const list = getSlksEvents();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const totalBudget = list.reduce((s, e) => s + (typeof getEventTotalBudget === 'function' ? getEventTotalBudget(e) : 0), 0);
+  const executed = list.filter(e => e.execution && (e.execution.status === 'Terlaksana' || e.execution.status === 'Selesai' || e.execution.actualDate)).length;
+  const target = list.reduce((s, e) => s + (Number(e.targetParticipants) || 0), 0);
+  set('slksTotalEvents', list.length);
+  set('slksTotalBudget', typeof formatRupiah === 'function' ? formatRupiah(totalBudget) : ('Rp ' + totalBudget.toLocaleString('id-ID')));
+  set('slksExecuted', executed + ' / ' + list.length);
+  set('slksTargetPeserta', target.toLocaleString('id-ID') + ' orang');
+  const box = document.getElementById('slksUpcomingList');
+  if (box) {
+    if (!list.length) {
+      box.innerHTML = '<p class="text-slate-400">Belum ada event Pilar SLKS. Klik “Tambah Layanan SLKS” untuk membuat yang pertama.</p>';
+    } else {
+      const sorted = [...list].sort((a, b) => (a.rawDate || '').localeCompare(b.rawDate || '')).slice(0, 5);
+      box.innerHTML = sorted.map(ev => `<button onclick="openDetailModal('${esc(String(ev.id))}')" class="w-full text-left px-2.5 py-2 rounded-lg border border-slate-200 hover:border-cyan-300 hover:bg-cyan-50/60 transition flex justify-between gap-2"><span class="font-semibold text-slate-700 truncate">${esc(ev.title || 'Event SLKS')}</span><span class="shrink-0 text-slate-400">${esc(ev.dateStr || '')}</span></button>`).join('');
+    }
+  }
+}
     function renderKakContent(pillarKey) {
       currentKakKey = pillarKey;
       const d = kakTemplates[pillarKey] || kakTemplates.penghargaan;
