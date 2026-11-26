@@ -5447,63 +5447,85 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
     attach();
   }
 })();
-    (function attachKakSlksAndManualPillarMenu() {
+   (function attachKakSlksAndManualPillarMenu() {
   if (window.__kakSlksAndManualPillarMenuLoaded) return;
   window.__kakSlksAndManualPillarMenuLoaded = true;
 
-  const STORAGE_KEY = 'kesra2027_custom_pillars_v1';
+  const CUSTOM_KEY = 'kesra2027_custom_pillars_v1';
+  const HIDDEN_KEY = 'kesra2027_hidden_pillars_v1';
+  const OVERRIDES_KEY = 'kesra2027_pillar_overrides_v1';
   const STYLE_ID = 'kak-slks-manual-pillar-style';
 
   if (!document.getElementById(STYLE_ID)) {
     const st = document.createElement('style');
     st.id = STYLE_ID;
     st.textContent = `
-      .addon-slks-kak-card {
+      .addon-slks-kak-card,
+      .addon-custom-kak-card {
+        position: relative;
         min-width: 185px;
         border-radius: 16px;
         padding: 14px 16px;
-        background: #eef2ff;
-        border: 1px solid #c7d2fe;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         gap: 8px;
         cursor: pointer;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .addon-slks-kak-card {
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
       }
       .addon-slks-kak-card:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(55, 48, 163, 0.1);
+        box-shadow: 0 4px 12px rgba(55, 48, 163, 0.12);
       }
       .addon-custom-kak-card {
-        min-width: 185px;
-        border-radius: 16px;
-        padding: 14px 16px;
         background: #ecfeff;
         border: 1px solid #a5f3fc;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 8px;
-        cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
       .addon-custom-kak-card:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(21, 94, 117, 0.1);
+        box-shadow: 0 4px 12px rgba(21, 94, 117, 0.12);
       }
       .addon-kak-card-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
+        gap: 6px;
+      }
+      .addon-kak-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .addon-kak-mini-btn {
+        border: 1px solid rgba(15, 23, 42, 0.15);
+        background: rgba(255, 255, 255, 0.9);
+        color: #334155;
+        border-radius: 6px;
+        padding: 1px 6px;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        line-height: 1.4;
+      }
+      .addon-kak-mini-btn:hover {
+        background: #ffffff;
+        color: #0f172a;
+      }
+      .addon-kak-mini-btn.is-danger:hover {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
       }
       .addon-kak-badge {
         font-size: 11px;
         font-weight: 700;
         padding: 2px 8px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.88);
         color: #1e293b;
       }
       .addon-kak-title {
@@ -5520,23 +5542,41 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
       .addon-custom-kak-card .addon-kak-pic {
         color: #0e7490;
       }
-      .addon-add-pillar-menu-btn {
+      .addon-toolbar-group {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 8px 14px;
+        flex-wrap: wrap;
+      }
+      .addon-add-pillar-menu-btn,
+      .addon-del-pillar-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 13px;
         border-radius: 12px;
         font-size: 12px;
         font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .addon-add-pillar-menu-btn {
         background: #ffffff;
         color: #0f172a;
         border: 1px solid #cbd5e1;
-        cursor: pointer;
-        white-space: nowrap;
       }
       .addon-add-pillar-menu-btn:hover {
         background: #f8fafc;
         border-color: #94a3b8;
+      }
+      .addon-del-pillar-menu-btn {
+        background: #fff1f2;
+        color: #be123c;
+        border: 1px solid #fecdd3;
+      }
+      .addon-del-pillar-menu-btn:hover {
+        background: #ffe4e6;
+        border-color: #fda4af;
       }
       .addon-filter-pillar-btn {
         padding: 6px 14px;
@@ -5558,20 +5598,47 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
     document.head.appendChild(st);
   }
 
-  function loadCustomPillars() {
+  function readJson(key, fallback) {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : fallback;
+      return parsed ?? fallback;
     } catch (_) {
-      return [];
+      return fallback;
     }
   }
 
-  function saveCustomPillars(list) {
+  function writeJson(key, val) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      localStorage.setItem(key, JSON.stringify(val));
     } catch (_) {}
+  }
+
+  function loadCustomPillars() {
+    const list = readJson(CUSTOM_KEY, []);
+    return Array.isArray(list) ? list : [];
+  }
+
+  function saveCustomPillars(list) {
+    writeJson(CUSTOM_KEY, list);
+  }
+
+  function loadHiddenPillars() {
+    const list = readJson(HIDDEN_KEY, []);
+    return Array.isArray(list) ? list : [];
+  }
+
+  function saveHiddenPillars(list) {
+    writeJson(HIDDEN_KEY, list);
+  }
+
+  function loadOverrides() {
+    const map = readJson(OVERRIDES_KEY, {});
+    return map && typeof map === 'object' ? map : {};
+  }
+
+  function saveOverrides(map) {
+    writeJson(OVERRIDES_KEY, map);
   }
 
   function countEventsForPillar(keyword) {
@@ -5595,11 +5662,46 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
     }).length;
   }
 
+  function tryOpenExistingPillarModal(pillarLabel) {
+    const target = String(pillarLabel || '').trim().toLowerCase();
+    const possibleFns = [
+      'openKakModal',
+      'openPilarModal',
+      'openModalPilar',
+      'editPilar',
+      'selectKakPilar',
+      'showKakByPilar'
+    ];
+    for (const fnName of possibleFns) {
+      if (typeof window[fnName] === 'function') {
+        try {
+          window[fnName](pillarLabel);
+          return true;
+        } catch (_) {}
+      }
+    }
+
+    // Coba klik kartu pilar bawaan yang cocok namanya bila ada
+    const kakInfo = findKakSectionRow();
+    if (kakInfo && kakInfo.cardsWrap) {
+      const nativeCard = Array.from(kakInfo.cardsWrap.children).find(el => {
+        if (el.classList.contains('addon-slks-kak-card') || el.classList.contains('addon-custom-kak-card')) {
+          return false;
+        }
+        return (el.innerText || '').toLowerCase().includes(target);
+      });
+      if (nativeCard) {
+        nativeCard.click();
+        return true;
+      }
+    }
+    return false;
+  }
+
   function applyFilterByPillar(labelOrAll) {
     const target = String(labelOrAll || 'Semua Pilar').trim();
     const isAll = target.toLowerCase() === 'semua pilar';
 
-    // Sinkronkan filter dropdown/variabel jika ada
     const selectEl =
       document.getElementById('filterPilar') ||
       document.getElementById('pilarFilter') ||
@@ -5614,7 +5716,6 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
       }
     }
 
-    // Filter baris/kartu event pada tampilan grid/tabel yang terlihat
     const eventRows = document.querySelectorAll('[data-event-id], tr[data-id], .event-card, .event-item');
     eventRows.forEach(el => {
       if (isAll) {
@@ -5625,11 +5726,86 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
       el.style.display = txt.includes(target.toLowerCase()) ? '' : 'none';
     });
 
-    // Update status aktif tombol filter tambahan
     document.querySelectorAll('.addon-filter-pillar-btn').forEach(btn => {
-      const active = btn.dataset.pillarLabel === target;
-      btn.classList.toggle('is-active', active);
+      btn.classList.toggle('is-active', btn.dataset.pillarLabel === target);
     });
+  }
+
+  function handlePillarCardClick(label) {
+    applyFilterByPillar(label);
+    tryOpenExistingPillarModal(label);
+  }
+
+  function editPillarItem(key, currentTitle, currentPic, isCustom) {
+    const nextTitle = window.prompt('Edit Nama Pilar:', currentTitle);
+    if (nextTitle === null) return;
+    const cleanTitle = String(nextTitle).trim();
+    if (!cleanTitle) return;
+
+    const nextPic = window.prompt('Edit PIC Pilar:', currentPic);
+    if (nextPic === null) return;
+    const cleanPic = String(nextPic).trim() || 'Tim Kesra';
+
+    if (isCustom) {
+      const list = loadCustomPillars().map(item =>
+        item.name.toLowerCase() === String(key).toLowerCase()
+          ? { ...item, name: cleanTitle, pic: cleanPic }
+          : item
+      );
+      saveCustomPillars(list);
+    } else {
+      const overrides = loadOverrides();
+      overrides[key] = { title: cleanTitle, pic: cleanPic };
+      saveOverrides(overrides);
+    }
+    renderAllAddons();
+  }
+
+  function deletePillarByName(rawName) {
+    const target = String(rawName || '').trim();
+    if (!target) return;
+
+    const confirmed = window.confirm(`Hapus Pilar Program "${target}"?`);
+    if (!confirmed) return;
+
+    const customList = loadCustomPillars();
+    const filteredCustom = customList.filter(p => p.name.toLowerCase() !== target.toLowerCase());
+    if (filteredCustom.length !== customList.length) {
+      saveCustomPillars(filteredCustom);
+    } else {
+      const hidden = loadHiddenPillars();
+      if (!hidden.some(h => h.toLowerCase() === target.toLowerCase())) {
+        hidden.push(target);
+        saveHiddenPillars(hidden);
+      }
+    }
+
+    applyFilterByPillar('Semua Pilar');
+    renderAllAddons();
+  }
+
+  function openDeletePillarMenu() {
+    const customList = loadCustomPillars().map(p => p.name);
+    const hiddenList = loadHiddenPillars();
+    const candidates = ['SLKS', ...customList];
+
+    if (hiddenList.length > 0) {
+      const restore = window.confirm(
+        `Terdapat pilar tersembunyi: ${hiddenList.join(', ')}.\nKlik OK untuk memulihkan pilar tersembunyi, atau Batal untuk memilih pilar yang akan dihapus.`
+      );
+      if (restore) {
+        saveHiddenPillars([]);
+        renderAllAddons();
+        return;
+      }
+    }
+
+    const chosen = window.prompt(
+      `Masukkan nama Pilar Program yang ingin dihapus:\n(${candidates.join(', ')})`
+    );
+    if (chosen && chosen.trim()) {
+      deletePillarByName(chosen.trim());
+    }
   }
 
   function findKakSectionRow() {
@@ -5665,7 +5841,7 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
   }
 
   function openAddPillarModal() {
-    const nameInput = window.prompt('Nama Pilar Baru (contoh: SLKS / Kesejahteraan Keluarga):');
+    const nameInput = window.prompt('Nama Pilar Baru (contoh: Kesejahteraan Keluarga):');
     const pillarName = String(nameInput || '').trim();
     if (!pillarName) return;
 
@@ -5683,76 +5859,150 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
 
   function renderAllAddons() {
     const customPillars = loadCustomPillars();
+    const hiddenPillars = loadHiddenPillars().map(h => h.toLowerCase());
+    const overrides = loadOverrides();
     const kakInfo = findKakSectionRow();
 
     if (kakInfo) {
-      const { sectionRoot, cardsWrap, proposalBtn } = kakInfo;
+      const { cardsWrap, proposalBtn } = kakInfo;
 
-      // Tombol menu "+ Tambah Pilar" di dekat Proposal Master Gabungan
-      if (proposalBtn && proposalBtn.parentElement && !proposalBtn.parentElement.querySelector('.addon-add-pillar-menu-btn')) {
-        const menuBtn = document.createElement('button');
-        menuBtn.type = 'button';
-        menuBtn.className = 'addon-add-pillar-menu-btn';
-        menuBtn.textContent = '+ Tambah Pilar';
-        menuBtn.addEventListener('click', function (e) {
+      // Sembunyikan/tampilkan kartu bawaan bila masuk daftar tersembunyi
+      Array.from(cardsWrap.children).forEach(el => {
+        if (el.classList.contains('addon-slks-kak-card') || el.classList.contains('addon-custom-kak-card')) {
+          return;
+        }
+        const firstLine = ((el.innerText || '').split('\n').map(s => s.trim()).filter(Boolean)[1] || '').toLowerCase();
+        const isHidden = firstLine && hiddenPillars.includes(firstLine);
+        el.style.display = isHidden ? 'none' : '';
+      });
+
+      // Tombol menu "+ Tambah Pilar" dan "Hapus Pilar"
+      if (proposalBtn && proposalBtn.parentElement && !proposalBtn.parentElement.querySelector('.addon-toolbar-group')) {
+        const group = document.createElement('div');
+        group.className = 'addon-toolbar-group';
+
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'addon-add-pillar-menu-btn';
+        addBtn.textContent = '+ Tambah Pilar';
+        addBtn.addEventListener('click', function (e) {
           e.preventDefault();
           e.stopPropagation();
           openAddPillarModal();
         });
-        proposalBtn.parentElement.insertBefore(menuBtn, proposalBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'addon-del-pillar-menu-btn';
+        delBtn.textContent = 'Hapus Pilar';
+        delBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openDeletePillarMenu();
+        });
+
+        group.appendChild(addBtn);
+        group.appendChild(delBtn);
+        proposalBtn.parentElement.insertBefore(group, proposalBtn);
       }
 
-      // Bersihkan kartu tambahan lama sebelum render ulang
       cardsWrap.querySelectorAll('.addon-slks-kak-card, .addon-custom-kak-card').forEach(c => c.remove());
 
-      // Kartu Pilar Program SLKS
-      const slksCount = countEventsForPillar('slks');
-      const slksCard = document.createElement('div');
-      slksCard.className = 'addon-slks-kak-card';
-      slksCard.innerHTML = `
-        <div class="addon-kak-card-top">
-          <span class="addon-kak-badge">SLKS</span>
-          <span class="addon-kak-badge">${slksCount > 0 ? slksCount + 'x' : 'Pilar'}</span>
-        </div>
-        <div class="addon-kak-title">SLKS</div>
-        <div class="addon-kak-pic">PIC: Wahyu &amp; Tim</div>
-      `;
-      slksCard.addEventListener('click', () => applyFilterByPillar('SLKS'));
-      cardsWrap.appendChild(slksCard);
+      // Kartu Pilar Program SLKS (bisa diklik & diedit)
+      if (!hiddenPillars.includes('slks')) {
+        const slksOv = overrides.slks || {};
+        const slksTitle = slksOv.title || 'SLKS';
+        const slksPic = slksOv.pic || 'Wahyu & Tim';
+        const slksCount = countEventsForPillar('slks');
 
-      // Kartu pilar manual tersimpan
+        const slksCard = document.createElement('div');
+        slksCard.className = 'addon-slks-kak-card';
+        slksCard.innerHTML = `
+          <div class="addon-kak-card-top">
+            <span class="addon-kak-badge">SLKS</span>
+            <div class="addon-kak-actions">
+              <button type="button" class="addon-kak-mini-btn addon-edit-btn" title="Edit Pilar SLKS">Edit</button>
+              <button type="button" class="addon-kak-mini-btn is-danger addon-del-btn" title="Hapus Pilar SLKS">Hapus</button>
+            </div>
+          </div>
+          <div class="addon-kak-title"></div>
+          <div class="addon-kak-pic"></div>
+        `;
+        slksCard.querySelector('.addon-kak-title').textContent = slksTitle;
+        slksCard.querySelector('.addon-kak-pic').textContent = `PIC: ${slksPic}${slksCount > 0 ? ` (${slksCount}x)` : ''}`;
+
+        slksCard.addEventListener('click', () => handlePillarCardClick(slksTitle));
+        slksCard.querySelector('.addon-edit-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          editPillarItem('slks', slksTitle, slksPic, false);
+        });
+        slksCard.querySelector('.addon-del-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          deletePillarByName('SLKS');
+        });
+
+        cardsWrap.appendChild(slksCard);
+      }
+
+      // Kartu pilar manual tersimpan (bisa diklik, diedit, dan dihapus)
       customPillars.forEach(p => {
+        if (hiddenPillars.includes(p.name.toLowerCase())) return;
         const cnt = countEventsForPillar(p.name);
         const card = document.createElement('div');
         card.className = 'addon-custom-kak-card';
         card.innerHTML = `
           <div class="addon-kak-card-top">
-            <span class="addon-kak-badge">Pilar</span>
-            <span class="addon-kak-badge">${cnt > 0 ? cnt + 'x' : 'Manual'}</span>
+            <span class="addon-kak-badge">${cnt > 0 ? cnt + 'x' : 'Pilar'}</span>
+            <div class="addon-kak-actions">
+              <button type="button" class="addon-kak-mini-btn addon-edit-btn" title="Edit Pilar">Edit</button>
+              <button type="button" class="addon-kak-mini-btn is-danger addon-del-btn" title="Hapus Pilar">Hapus</button>
+            </div>
           </div>
           <div class="addon-kak-title"></div>
           <div class="addon-kak-pic"></div>
         `;
         card.querySelector('.addon-kak-title').textContent = p.name;
         card.querySelector('.addon-kak-pic').textContent = 'PIC: ' + (p.pic || 'Tim Kesra');
-        card.addEventListener('click', () => applyFilterByPillar(p.name));
+
+        card.addEventListener('click', () => handlePillarCardClick(p.name));
+        card.querySelector('.addon-edit-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          editPillarItem(p.name, p.name, p.pic || 'Tim Kesra', true);
+        });
+        card.querySelector('.addon-del-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          deletePillarByName(p.name);
+        });
+
         cardsWrap.appendChild(card);
       });
-
-      void sectionRoot;
     }
 
     const filterBar = findFilterBar();
     if (filterBar) {
       filterBar.querySelectorAll('.addon-filter-pillar-btn').forEach(b => b.remove());
 
+      Array.from(filterBar.querySelectorAll('button'))
+        .filter(b => !b.classList.contains('addon-filter-pillar-btn'))
+        .forEach(b => {
+          const lbl = (b.textContent || '').trim().toLowerCase();
+          if (lbl && lbl !== 'semua pilar') {
+            b.style.display = hiddenPillars.includes(lbl) ? 'none' : '';
+          }
+        });
+
       const existingLabels = new Set(
         Array.from(filterBar.querySelectorAll('button'))
-          .filter(b => !b.classList.contains('addon-filter-pillar-btn'))
+          .filter(b => !b.classList.contains('addon-filter-pillar-btn') && b.style.display !== 'none')
           .map(b => (b.textContent || '').trim().toLowerCase())
       );
 
-      const extraFilters = ['SLKS', ...customPillars.map(p => p.name)];
+      const slksTitle = (overrides.slks && overrides.slks.title) || 'SLKS';
+      const extraFilters = [
+        ...(hiddenPillars.includes('slks') ? [] : [slksTitle]),
+        ...customPillars.filter(p => !hiddenPillars.includes(p.name.toLowerCase())).map(p => p.name)
+      ];
+
       extraFilters.forEach(label => {
         if (!label || existingLabels.has(label.toLowerCase())) return;
         const fBtn = document.createElement('button');
