@@ -5447,6 +5447,342 @@ setTimeout(() => { initTeamChatRealtime(); }, 2500);
     attach();
   }
 })();
+    (function attachKakSlksAndManualPillarMenu() {
+  if (window.__kakSlksAndManualPillarMenuLoaded) return;
+  window.__kakSlksAndManualPillarMenuLoaded = true;
+
+  const STORAGE_KEY = 'kesra2027_custom_pillars_v1';
+  const STYLE_ID = 'kak-slks-manual-pillar-style';
+
+  if (!document.getElementById(STYLE_ID)) {
+    const st = document.createElement('style');
+    st.id = STYLE_ID;
+    st.textContent = `
+      .addon-slks-kak-card {
+        min-width: 185px;
+        border-radius: 16px;
+        padding: 14px 16px;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 8px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .addon-slks-kak-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(55, 48, 163, 0.1);
+      }
+      .addon-custom-kak-card {
+        min-width: 185px;
+        border-radius: 16px;
+        padding: 14px 16px;
+        background: #ecfeff;
+        border: 1px solid #a5f3fc;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 8px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .addon-custom-kak-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(21, 94, 117, 0.1);
+      }
+      .addon-kak-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .addon-kak-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.85);
+        color: #1e293b;
+      }
+      .addon-kak-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+      }
+      .addon-kak-pic {
+        font-size: 12px;
+        font-weight: 600;
+        color: #4338ca;
+      }
+      .addon-custom-kak-card .addon-kak-pic {
+        color: #0e7490;
+      }
+      .addon-add-pillar-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .addon-add-pillar-menu-btn:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+      }
+      .addon-filter-pillar-btn {
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #ffffff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .addon-filter-pillar-btn.is-active {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
+  function loadCustomPillars() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function saveCustomPillars(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    } catch (_) {}
+  }
+
+  function countEventsForPillar(keyword) {
+    if (!Array.isArray(window.eventsData)) return 0;
+    const kw = String(keyword || '').trim().toLowerCase();
+    if (!kw) return 0;
+    return window.eventsData.filter(ev => {
+      const hay = [
+        ev?.category,
+        ev?.pilar,
+        ev?.pillar,
+        ev?.title,
+        ev?.nama,
+        ev?.kegiatan,
+        Array.isArray(ev?.customPillars) ? ev.customPillars.join(' ') : ''
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(kw);
+    }).length;
+  }
+
+  function applyFilterByPillar(labelOrAll) {
+    const target = String(labelOrAll || 'Semua Pilar').trim();
+    const isAll = target.toLowerCase() === 'semua pilar';
+
+    // Sinkronkan filter dropdown/variabel jika ada
+    const selectEl =
+      document.getElementById('filterPilar') ||
+      document.getElementById('pilarFilter') ||
+      document.querySelector('select[id*="pilar" i]');
+    if (selectEl) {
+      const matchOpt = Array.from(selectEl.options).find(
+        o => o.value.toLowerCase() === target.toLowerCase() || o.text.toLowerCase() === target.toLowerCase()
+      );
+      if (matchOpt) {
+        selectEl.value = matchOpt.value;
+        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    // Filter baris/kartu event pada tampilan grid/tabel yang terlihat
+    const eventRows = document.querySelectorAll('[data-event-id], tr[data-id], .event-card, .event-item');
+    eventRows.forEach(el => {
+      if (isAll) {
+        el.style.display = '';
+        return;
+      }
+      const txt = (el.innerText || '').toLowerCase();
+      el.style.display = txt.includes(target.toLowerCase()) ? '' : 'none';
+    });
+
+    // Update status aktif tombol filter tambahan
+    document.querySelectorAll('.addon-filter-pillar-btn').forEach(btn => {
+      const active = btn.dataset.pillarLabel === target;
+      btn.classList.toggle('is-active', active);
+    });
+  }
+
+  function findKakSectionRow() {
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, div, span'));
+    const targetHeading = headings.find(el =>
+      (el.textContent || '').includes('Kerangka KAK per Pilar Program') &&
+      (el.textContent || '').length < 140
+    );
+    if (!targetHeading) return null;
+
+    let parent = targetHeading.parentElement;
+    for (let i = 0; i < 5 && parent; i++) {
+      const cardsWrap = Array.from(parent.querySelectorAll('div')).find(d => {
+        const txt = d.innerText || '';
+        return txt.includes('Penghargaan') && txt.includes('Sejiwa') && d.children.length >= 4;
+      });
+      if (cardsWrap) {
+        const proposalBtn = Array.from(parent.querySelectorAll('button, a')).find(b =>
+          (b.textContent || '').includes('Proposal Master Gabungan')
+        );
+        return { sectionRoot: parent, cardsWrap, proposalBtn };
+      }
+      parent = parent.parentElement;
+    }
+    return null;
+  }
+
+  function findFilterBar() {
+    const allBtn = Array.from(document.querySelectorAll('button')).find(
+      b => (b.textContent || '').trim() === 'Semua Pilar'
+    );
+    return allBtn ? allBtn.parentElement : null;
+  }
+
+  function openAddPillarModal() {
+    const nameInput = window.prompt('Nama Pilar Baru (contoh: SLKS / Kesejahteraan Keluarga):');
+    const pillarName = String(nameInput || '').trim();
+    if (!pillarName) return;
+
+    const picInput = window.prompt('PIC Pilar (opsional, contoh: Tim Kesra):');
+    const picName = String(picInput || '').trim() || 'Tim Kesra';
+
+    const current = loadCustomPillars();
+    const exists = current.some(item => item.name.toLowerCase() === pillarName.toLowerCase());
+    if (!exists) {
+      current.push({ name: pillarName, pic: picName });
+      saveCustomPillars(current);
+    }
+    renderAllAddons();
+  }
+
+  function renderAllAddons() {
+    const customPillars = loadCustomPillars();
+    const kakInfo = findKakSectionRow();
+
+    if (kakInfo) {
+      const { sectionRoot, cardsWrap, proposalBtn } = kakInfo;
+
+      // Tombol menu "+ Tambah Pilar" di dekat Proposal Master Gabungan
+      if (proposalBtn && proposalBtn.parentElement && !proposalBtn.parentElement.querySelector('.addon-add-pillar-menu-btn')) {
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'addon-add-pillar-menu-btn';
+        menuBtn.textContent = '+ Tambah Pilar';
+        menuBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openAddPillarModal();
+        });
+        proposalBtn.parentElement.insertBefore(menuBtn, proposalBtn);
+      }
+
+      // Bersihkan kartu tambahan lama sebelum render ulang
+      cardsWrap.querySelectorAll('.addon-slks-kak-card, .addon-custom-kak-card').forEach(c => c.remove());
+
+      // Kartu Pilar Program SLKS
+      const slksCount = countEventsForPillar('slks');
+      const slksCard = document.createElement('div');
+      slksCard.className = 'addon-slks-kak-card';
+      slksCard.innerHTML = `
+        <div class="addon-kak-card-top">
+          <span class="addon-kak-badge">SLKS</span>
+          <span class="addon-kak-badge">${slksCount > 0 ? slksCount + 'x' : 'Pilar'}</span>
+        </div>
+        <div class="addon-kak-title">SLKS</div>
+        <div class="addon-kak-pic">PIC: Wahyu &amp; Tim</div>
+      `;
+      slksCard.addEventListener('click', () => applyFilterByPillar('SLKS'));
+      cardsWrap.appendChild(slksCard);
+
+      // Kartu pilar manual tersimpan
+      customPillars.forEach(p => {
+        const cnt = countEventsForPillar(p.name);
+        const card = document.createElement('div');
+        card.className = 'addon-custom-kak-card';
+        card.innerHTML = `
+          <div class="addon-kak-card-top">
+            <span class="addon-kak-badge">Pilar</span>
+            <span class="addon-kak-badge">${cnt > 0 ? cnt + 'x' : 'Manual'}</span>
+          </div>
+          <div class="addon-kak-title"></div>
+          <div class="addon-kak-pic"></div>
+        `;
+        card.querySelector('.addon-kak-title').textContent = p.name;
+        card.querySelector('.addon-kak-pic').textContent = 'PIC: ' + (p.pic || 'Tim Kesra');
+        card.addEventListener('click', () => applyFilterByPillar(p.name));
+        cardsWrap.appendChild(card);
+      });
+
+      void sectionRoot;
+    }
+
+    const filterBar = findFilterBar();
+    if (filterBar) {
+      filterBar.querySelectorAll('.addon-filter-pillar-btn').forEach(b => b.remove());
+
+      const existingLabels = new Set(
+        Array.from(filterBar.querySelectorAll('button'))
+          .filter(b => !b.classList.contains('addon-filter-pillar-btn'))
+          .map(b => (b.textContent || '').trim().toLowerCase())
+      );
+
+      const extraFilters = ['SLKS', ...customPillars.map(p => p.name)];
+      extraFilters.forEach(label => {
+        if (!label || existingLabels.has(label.toLowerCase())) return;
+        const fBtn = document.createElement('button');
+        fBtn.type = 'button';
+        fBtn.className = 'addon-filter-pillar-btn';
+        fBtn.dataset.pillarLabel = label;
+        fBtn.textContent = label;
+        fBtn.addEventListener('click', () => applyFilterByPillar(label));
+        filterBar.appendChild(fBtn);
+      });
+    }
+  }
+
+  const mo = new MutationObserver(() => {
+    if (!mo._scheduled) {
+      mo._scheduled = true;
+      requestAnimationFrame(() => {
+        mo._scheduled = false;
+        renderAllAddons();
+      });
+    }
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAllAddons);
+  } else {
+    renderAllAddons();
+  }
+  mo.observe(document.body, { childList: true, subtree: true });
+})();
   </script>
 </body>
 </html>
